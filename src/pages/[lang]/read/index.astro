@@ -1,0 +1,57 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Cover from '../../../components/Cover.astro';
+import { LANGS, t, href, type Lang } from '../../../lib/i18n';
+import { BOOKS, tocOf, textLang } from '../../../lib/catalog';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const s = t[lang];
+const readable = BOOKS.filter((b) => b.status === 'reading').map((b) => {
+  const tl = textLang(b, lang)!;
+  return { b, tl, first: tocOf(b.slug, tl)[0] };
+});
+---
+<Base lang={lang} title={s.readHubTitle} path="read" current="read" description={s.readHubLead}>
+  <div class="wrap" style="max-width:960px">
+    <header class="page-head">
+      <span class="vl-label">ved·Life</span>
+      <h1>{s.readHubTitle}</h1>
+      <p>{s.readHubLead}</p>
+      <a class="continue" id="continue" href="#" hidden>
+        <span><span class="vl-label vl-label--gold">{s.continueReading}</span><b id="contTitle"></b><span id="contChapter"></span></span>
+        <span class="arrow" aria-hidden="true">→</span>
+      </a>
+    </header>
+    <div class="read-list">
+      {readable.map(({ b, tl, first }) => (
+        <a class="read-row" href={href(lang, `read/${b.slug}/${first.id}`)}>
+          <Cover book={b} lang={lang} size="sm" />
+          <div>
+            <h3>{b.title[lang]}</h3>
+            <p>{b.author[lang]} · {s.freeChapters(b.freeChapters)}{tl !== lang ? ` · ${s.textIn}` : ''}</p>
+          </div>
+          <span class="btn btn--ink">{s.startReading}</span>
+        </a>
+      ))}
+    </div>
+  </div>
+  <script type="application/json" id="readVars" set:html={JSON.stringify({ lang, slugs: readable.map((r) => [r.b.slug, r.tl]) })} />
+  <script>
+    // «Продолжить чтение»: самая свежая запись прогресса из читалки
+    const v = JSON.parse(document.getElementById('readVars')!.textContent!);
+    let best: any = null;
+    for (const [slug, tl] of v.slugs) {
+      try {
+        const p = JSON.parse(localStorage.getItem(`vl:progress:${slug}:${tl}`) || 'null');
+        if (p && p.url && p.url.startsWith(`/${v.lang}/`) && (!best || p.at > best.at)) best = p;
+      } catch { /* нет доступа к хранилищу */ }
+    }
+    if (best) {
+      const a = document.getElementById('continue') as HTMLAnchorElement;
+      a.href = best.url; a.hidden = false;
+      document.getElementById('contTitle')!.textContent = best.title;
+      document.getElementById('contChapter')!.textContent = best.chapterTitle;
+    }
+  </script>
+</Base>

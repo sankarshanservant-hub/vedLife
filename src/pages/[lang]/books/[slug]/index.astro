@@ -1,0 +1,80 @@
+---
+import Base from '../../../../layouts/Base.astro';
+import Cover from '../../../../components/Cover.astro';
+import { LANGS, t, href, type Lang } from '../../../../lib/i18n';
+import { BOOKS, territoryOf, tocOf, textLang } from '../../../../lib/catalog';
+
+export function getStaticPaths() {
+  return LANGS.flatMap((lang) => BOOKS.map((b) => ({ params: { lang, slug: b.slug }, props: { book: b } })));
+}
+const lang = Astro.params.lang as Lang;
+const { book } = Astro.props;
+const s = t[lang];
+const terr = territoryOf(book);
+const tl = textLang(book, lang);
+const toc = tl ? tocOf(book.slug, tl) : [];
+const first = toc[0];
+const stores = (book.stores ?? []).filter((x) => x.lang === lang);
+const audio = book.audio?.[lang];
+let lastPart: string | undefined;
+---
+<Base lang={lang} title={book.title[lang]} path={`books/${book.slug}`} current="books" entry={book.entry} description={book.description[lang]}>
+  <div class={`wrap book pig-${terr.pigment}`}>
+    <div class="book__cover"><Cover book={book} lang={lang} size="lg" /></div>
+    <div>
+      <span class="vl-label">№ {book.entry} · {terr.name[lang]}</span>
+      <h1>{book.title[lang]}</h1>
+      {book.subtitle?.[lang] && <p class="book__sub">{book.subtitle[lang]}</p>}
+      <p class="book__author">{book.author[lang]}</p>
+      <p class="book__desc">{book.description[lang]}</p>
+      {book.note?.[lang] && <p class="book__note">{book.note[lang]}</p>}
+
+      <h2 class="sr-only">{s.forms}</h2>
+      <div class="forms">
+        {first
+          ? <a class="form form--on" href={href(lang, `read/${book.slug}/${first.id}`)}><b>{s.formRead}</b><span>{s.formReadNote(Math.min(book.freeChapters, toc.length))}{tl !== lang ? ` · ${s.textIn}` : ''}</span><span class="vl-label vl-label--gold">{s.startReading} →</span></a>
+          : <div class="form form--off"><b>{s.formRead}</b><span>{s.inPreparation}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>}
+        <div class="form form--off"><b>{s.formListen}</b><span>{s.formListenSoon}</span><span class="vl-label vl-label--muted">{audio === 'available' ? '' : s.formSoon}</span></div>
+        {stores.length
+          ? <div class="form"><b>{s.formBuy}</b>{stores.map((x) => <a href={x.url} rel="noopener" target="_blank">{x.name} ↗</a>)}</div>
+          : <div class="form form--off"><b>{s.formBuy}</b><span>{s.formBuySoon}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>}
+        <div class="form form--off"><b>{s.formReforms}</b><span>{s.formReformsNote}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>
+      </div>
+
+      {toc.length > 0 && (
+        <section class="toc" aria-labelledby="toc-h">
+          <h2 id="toc-h">{s.contents}</h2>
+          <ol>
+            {toc.map((c, i) => {
+              const partRow = c.part && c.part !== lastPart ? c.part : null;
+              lastPart = c.part;
+              return (
+                <>
+                  {partRow && <li class="part"><span class="vl-label">{partRow}</span></li>}
+                  <li>
+                    {i < book.freeChapters
+                      ? <a href={href(lang, `read/${book.slug}/${c.id}`)}><span>{c.title}</span><span class="min">{c.minutes} {s.min}</span></a>
+                      : <span class="row"><span>{c.title}</span><span class="min">{s.locked}</span></span>}
+                  </li>
+                </>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+
+      <section class="colophon" aria-label={s.colophon}>
+        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" stroke-width="1.6" />
+          <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width=".8" />
+          <g transform="translate(29 29) scale(.21)"><rect x="24" y="24" width="152" height="152" rx="30" fill="none" stroke="currentColor" stroke-width="12" transform="rotate(20 100 100)" /><circle cx="100" cy="100" r="54" fill="currentColor" /></g>
+        </svg>
+        <dl>
+          <dt>{s.edition}</dt><dd>№ {book.entry} · ved·Life · {book.year}</dd>
+          <dt>{s.book}</dt><dd>{book.title[lang]} · {book.author[lang]}</dd>
+          <dt>{s.forms}</dt><dd>{book.texts.map((l) => l.toUpperCase()).join(' · ') || '—'}</dd>
+        </dl>
+      </section>
+    </div>
+  </div>
+</Base>

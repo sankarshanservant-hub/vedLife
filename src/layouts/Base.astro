@@ -1,0 +1,63 @@
+---
+import '../styles/global.css';
+import type { Lang } from '../lib/i18n';
+import { t, href, otherLang } from '../lib/i18n';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+
+interface Props {
+  lang: Lang;
+  title: string;
+  description?: string;
+  // путь страницы без языка — для переключателя и hreflang
+  path?: string;
+  current?: 'books' | 'read' | 'about';
+  entry?: string;
+  chrome?: boolean; // false — без шапки и подвала (читалка)
+}
+const { lang, title, description, path = '', current, entry, chrome = true } = Astro.props;
+const s = t[lang];
+const fullTitle = title === 'ved·Life' ? `ved·Life — ${s.tagline}` : `${title} — ved·Life`;
+---
+<!doctype html>
+<html lang={lang}>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>{fullTitle}</title>
+  {description && <meta name="description" content={description} />}
+  <meta name="theme-color" content="#0B0B0C" />
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  <link rel="alternate" hreflang={otherLang(lang)} href={href(otherLang(lang), path)} />
+  <link rel="preload" href={`/fonts/inter-${lang === 'ru' ? 'cyrillic' : 'latin'}-400-normal.woff2`} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={`/fonts/inter-${lang === 'ru' ? 'cyrillic' : 'latin'}-600-normal.woff2`} as="font" type="font/woff2" crossorigin />
+  <meta property="og:title" content={fullTitle} />
+  {description && <meta property="og:description" content={description} />}
+  <meta property="og:site_name" content="ved·Life" />
+</head>
+<body>
+  <a class="skip" href="#main">{s.skip}</a>
+  {chrome && <Header lang={lang} current={current} altPath={path} />}
+  <slot name="top" />
+  <main id="main"><slot /></main>
+  {chrome && <Footer lang={lang} entry={entry} />}
+  <script>
+    // Сборка знака: один раз, когда он попадает в кадр (03b · Motion).
+    const marks = document.querySelectorAll<SVGElement>('.vl-mark[data-build]');
+    const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduce && 'IntersectionObserver' in window) {
+      marks.forEach((m) => {
+        m.querySelectorAll<SVGElement>('.vl-ring').forEach((r, i, all) => {
+          r.style.animationDelay = `${(all.length - 1 - i) * 46}ms`;
+        });
+      });
+      const io = new IntersectionObserver((entries) => {
+        entries.forEach((e) => {
+          if (e.isIntersecting) { e.target.classList.add('is-building'); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.3 });
+      marks.forEach((m) => io.observe(m));
+    }
+  </script>
+</body>
+</html>

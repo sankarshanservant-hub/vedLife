@@ -1,0 +1,35 @@
+---
+// Подвал: одна линейка и строка указателя (17 · The Living Index, «Applied»).
+import type { Lang } from '../lib/i18n';
+import { t, href } from '../lib/i18n';
+import { nextEntry } from '../lib/catalog';
+import Mark from './Mark.astro';
+import Wordmark from './Wordmark.astro';
+interface Props { lang: Lang; entry?: string }
+const { lang, entry } = Astro.props;
+const s = t[lang];
+---
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="site-footer__top">
+      <div class="site-footer__brand">
+        <Mark size={44} />
+        <div>
+          <Wordmark />
+          <div class="vl-label vl-label--muted site-footer__desc">{s.descriptor}</div>
+        </div>
+      </div>
+      <p class="site-footer__note">{s.footerNote}</p>
+      <nav class="site-footer__nav" aria-label={lang === 'ru' ? 'Подвал' : 'Footer'}>
+        <a href={href(lang, 'books')}>{s.nav.books}</a>
+        <a href={href(lang, 'read')}>{s.nav.read}</a>
+        <a href={href(lang, 'about')}>{s.nav.about}</a>
+      </nav>
+    </div>
+    <div class="index-line">
+      <span>{entry ? `№ ${entry}` : `№ ${nextEntry()} · ${s.awaiting}`}</span>
+      <span>ved·Life</span>
+      <span>2026</span>
+    </div>
+  </div>
+</footer>

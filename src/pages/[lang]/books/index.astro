@@ -1,0 +1,45 @@
+---
+import Base from '../../../layouts/Base.astro';
+import Cover from '../../../components/Cover.astro';
+import Glyph from '../../../components/Glyph.astro';
+import { LANGS, t, href, type Lang } from '../../../lib/i18n';
+import { BOOKS, TERRITORIES } from '../../../lib/catalog';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const s = t[lang];
+const groups = TERRITORIES.map((tr) => ({ tr, books: BOOKS.filter((b) => b.territory === tr.id) })).filter((g) => g.books.length);
+---
+<Base lang={lang} title={s.nav.books} path="books" current="books" description={s.indexLead}>
+  <div class="wrap">
+    <header class="page-head">
+      <span class="vl-label">ved·Life · {s.books(BOOKS.length)}</span>
+      <h1>{s.nav.books}</h1>
+      <p>{s.heroLead}</p>
+      <nav class="chips" aria-label={s.territories}>
+        {groups.map(({ tr }) => <a class={`chip pig-${tr.pigment}`} href={`#${tr.id}`}><Glyph name={tr.glyph} size={18} />{tr.name[lang]}</a>)}
+      </nav>
+    </header>
+    {groups.map(({ tr, books }) => (
+      <section class={`terr-section pig-${tr.pigment}`} id={tr.id} aria-labelledby={`h-${tr.id}`}>
+        <div class="terr-section__head">
+          <Glyph name={tr.glyph} size={30} />
+          <h2 id={`h-${tr.id}`}>{tr.name[lang]}</h2>
+          <p>{tr.about[lang]}</p>
+        </div>
+        <div class="book-grid">
+          {books.map((b) => (
+            <a class="book-card" href={href(lang, `books/${b.slug}`)}>
+              <Cover book={b} lang={lang} />
+              <div>
+                <h3>{b.title[lang]}</h3>
+                <p class="meta">{b.author[lang]}</p>
+                <p class="meta">{b.status === 'soon' ? s.formSoon : s.freeChapters(b.freeChapters)}</p>
+              </div>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</Base>

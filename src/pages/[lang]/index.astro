@@ -1,0 +1,107 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import Cover from '../../components/Cover.astro';
+import Glyph from '../../components/Glyph.astro';
+import { LANGS, t, href, type Lang } from '../../lib/i18n';
+import { BOOKS, TERRITORIES, territoryOf, tocOf, loadChapter, textLang, nextEntry } from '../../lib/catalog';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const s = t[lang];
+const feature = BOOKS[0];
+const fLang = textLang(feature, lang)!;
+const fToc = tocOf(feature.slug, fLang);
+const prologue = await loadChapter(feature.slug, fLang, fToc[0].id);
+const excerpt = (prologue?.blocks ?? []).filter((b) => b.type === 'p').slice(0, 4);
+const fTerr = territoryOf(feature);
+---
+<Base lang={lang} title="ved·Life" description={s.heroLead}>
+  <section class="hero">
+    <div class="wrap hero__grid">
+      <div>
+        <span class="vl-label vl-label--gold">ved·Life · {s.tagline}</span>
+        <h1>{s.heroTitle}</h1>
+        <p class="hero__lead">{s.heroLead}</p>
+        <div class="hero__actions">
+          <a class="btn btn--paper" href={href(lang, `read/${feature.slug}/${fToc[0].id}`)}>{s.startReading} · {feature.title[lang]}</a>
+          <a class="btn btn--ghost" href={href(lang, 'books')}>{s.allBooks}</a>
+        </div>
+      </div>
+      <div class="hero__mark">
+        <Mark size={340} build label="ved·Life" />
+        <span class="vl-label hero__descriptor">{s.descriptor}</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap">
+    <div class={`feature pig-${fTerr.pigment}`}>
+      <a href={href(lang, `books/${feature.slug}`)} aria-label={feature.title[lang]}><Cover book={feature} lang={lang} size="lg" /></a>
+      <div>
+        <div class="feature__meta">
+          <span class="pill vl-label vl-label--gold">{s.nowReading}</span>
+          <span class="vl-label">№ {feature.entry} · {fTerr.name[lang]}</span>
+        </div>
+        <h2>{feature.title[lang]}</h2>
+        {feature.subtitle?.[lang] && <p class="feature__sub">{feature.subtitle[lang]}</p>}
+        <p class="feature__desc">{feature.description[lang]}</p>
+        <div class="excerpt">
+          <div class="excerpt__title"><span class="vl-label" style="color:var(--claim-source)">{fToc[0].title}</span><span class="vl-label vl-label--muted">{fToc[0].minutes} {s.min}</span></div>
+          <div class="excerpt__fade">{excerpt.map((b) => <p>{b.text}</p>)}</div>
+          <a class="arrow-link" href={href(lang, `read/${feature.slug}/${fToc[0].id}`)}>{s.readOn} →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section wrap" aria-labelledby="index-title">
+    <div class="section__head">
+      <div><span class="vl-label">ved·Life · 2026</span><h2 id="index-title">{s.indexTitle}</h2></div>
+      <p>{s.indexLead}</p>
+    </div>
+    <table class="index-table">
+      <tbody>
+        {BOOKS.map((b) => {
+          const terr = territoryOf(b);
+          return (
+            <tr class={`pig-${terr.pigment}`}>
+              <td class="no">№ {b.entry}</td>
+              <td class="title"><a href={href(lang, `books/${b.slug}`)}>{b.title[lang]}</a><small>{b.author[lang]}</small></td>
+              <td><span class="terr"><Glyph name={terr.glyph} size={22} /><span class="vl-label vl-label--muted">{terr.name[lang]}</span></span></td>
+              <td class="yr">{b.year}</td>
+            </tr>
+          );
+        })}
+        <tr class="open"><td class="no">№ {nextEntry()}</td><td class="title" colspan="2">{s.awaiting}</td><td class="yr">——</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="section wrap" aria-labelledby="terr-title">
+    <div class="section__head"><div><span class="vl-label">{s.territories}</span><h2 id="terr-title" class="sr-only">{s.territories}</h2></div></div>
+    <div class="terr-grid">
+      {TERRITORIES.map((tr) => {
+        const n = BOOKS.filter((b) => b.territory === tr.id).length;
+        return (
+          <a class={`terr-card pig-${tr.pigment}`} href={href(lang, 'books') + '#' + tr.id}>
+            <Glyph name={tr.glyph} size={40} />
+            <h3>{tr.name[lang]}</h3>
+            <p>{tr.about[lang]}</p>
+            <span class="vl-label">{s.books(n)}</span>
+          </a>
+        );
+      })}
+    </div>
+  </section>
+
+  <section class="manifest">
+    <div class="wrap">
+      <h2>{s.descriptor}</h2>
+      <div>
+        <p>{s.manifestLead}</p>
+        <a class="arrow-link" href={href(lang, 'about')}>{s.aboutLink} →</a>
+      </div>
+    </div>
+  </section>
+</Base>

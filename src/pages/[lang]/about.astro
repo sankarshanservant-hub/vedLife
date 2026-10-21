@@ -1,0 +1,47 @@
+---
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import { LANGS, t, type Lang } from '../../lib/i18n';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const s = t[lang];
+const c = {
+  ru: {
+    lead: 'ved·Life — издательство и культурная среда вокруг ведической традиции. Мы переводим огромный корпус знания в книги, звук и опыт для современной жизни: с точностью хорошей студии и глубиной древнего источника.',
+    name: 'Veda + Life: древнее знание, прожитое сейчас.',
+    p: [
+      { h: 'Источник говорит сам', t: 'Мы обрамляем и переводим, но не проповедуем. Название источника, век, переводчик — конкретика вместо атмосферы.' },
+      { h: 'Без костюма', t: 'Мы уважаем глубину традиции и убираем всё, что стоит между человеком и знанием: мистификацию, эзотерический шум, закрытость.' },
+      { h: 'Запись не закрыта', t: 'Знание живо, пока находит новые формы. Каждая книга — следующая строка в летописи, и следующая строка всегда остаётся открытой.' },
+    ],
+    mark: 'Знак — один квадрат, повёрнутый через все стадии своего становления и собранный в живой центр. Сохранение через преображение.',
+  },
+  en: {
+    lead: 'ved·Life is a press and a cultural ecosystem around the Vedic tradition. We translate a vast body of knowledge into books, sound and experiences for contemporary life — with the rigour of a modern studio and the depth of an ancient source.',
+    name: 'Veda + Life: ancient knowledge, lived now.',
+    p: [
+      { h: 'Let the source speak', t: 'We frame and translate; we don’t sermonise. The source, the century, the translator — specifics instead of atmosphere.' },
+      { h: 'No costume', t: 'We honour the depth of the tradition and remove what stands between a person and the knowledge: mystification, esoteric clutter, gatekeeping.' },
+      { h: 'The record is open', t: 'Knowledge stays alive by finding new forms. Every book is the next line in a record, and the next line is always left open.' },
+    ],
+    mark: 'The mark is a single square turned through every stage of its own becoming, resolving to a living centre. Preservation through transformation.',
+  },
+}[lang];
+---
+<Base lang={lang} title={s.nav.about} path="about" current="about" description={c.lead}>
+  <div class="wrap">
+    <header class="page-head">
+      <span class="vl-label">{s.descriptor}</span>
+      <h1>{c.name}</h1>
+    </header>
+    <div class="prose"><p style="font-size:21px;margin-top:28px">{c.lead}</p></div>
+    <div class="principles">
+      {c.p.map((x, i) => <div><span class="vl-label">0{i + 1}</span><h3>{x.h}</h3><p>{x.t}</p></div>)}
+    </div>
+    <section class="section" style="display:grid;grid-template-columns:auto 1fr;gap:40px;align-items:center">
+      <Mark size={180} build label="ved·Life" />
+      <p class="prose" style="font-size:19px">{c.mark}</p>
+    </section>
+  </div>
+</Base>

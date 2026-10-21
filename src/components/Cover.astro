@@ -1,0 +1,24 @@
+---
+// Обложка серии: пигмент территории + паттерн Continuum (P—01, «covers · series»),
+// угловые скобки (D—01) вокруг поля названия, знак внизу слева на 8% ширины.
+import type { Book } from '../lib/catalog';
+import { territoryOf } from '../lib/catalog';
+import type { Lang } from '../lib/i18n';
+import MarkMini from './MarkMini.astro';
+interface Props { book: Book; lang: Lang; size?: 'sm' | 'md' | 'lg'; class?: string }
+const { book, lang, size = 'md', class: cls } = Astro.props;
+const terr = territoryOf(book);
+---
+<div class:list={['cover', `cover--${size}`, `pig-${terr.pigment}`, cls]} role="img"
+  aria-label={`${book.title[lang]} — ${book.author[lang]}`}>
+  <div class="cover__pattern" aria-hidden="true"></div>
+  <div class="cover__top" aria-hidden="true"><span>№ {book.entry}</span><span>{terr.name[lang]}</span></div>
+  <div class="cover__field" aria-hidden="true">
+    <div class="cover__title">{book.title[lang]}</div>
+    {book.subtitle?.[lang] && <div class="cover__subtitle">{book.subtitle[lang]}</div>}
+  </div>
+  <div class="cover__foot" aria-hidden="true">
+    <MarkMini size={size === 'sm' ? 12 : 18} />
+    <span class="cover__author">{book.author[lang].replace(/^(Под редакцией|Edited by) /, '')}</span>
+  </div>
+</div>

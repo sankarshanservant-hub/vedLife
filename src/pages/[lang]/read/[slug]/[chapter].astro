@@ -1,0 +1,138 @@
+---
+// Читалка: открыты только первые freeChapters глав, остальные страницы не собираются.
+// После последней открытой главы — «Порог» (16 · Thresholds).
+import Base from '../../../../layouts/Base.astro';
+import MarkMini from '../../../../components/MarkMini.astro';
+import Wordmark from '../../../../components/Wordmark.astro';
+import { LANGS, t, href, type Lang } from '../../../../lib/i18n';
+import { BOOKS, territoryOf, tocOf, loadChapter, textLang } from '../../../../lib/catalog';
+
+export function getStaticPaths() {
+  return LANGS.flatMap((lang) => BOOKS.flatMap((b) => {
+    const tl = textLang(b, lang);
+    if (!tl) return [];
+    const toc = tocOf(b.slug, tl);
+    const open = toc.slice(0, b.freeChapters);
+    return open.map((c, i) => ({ params: { lang, slug: b.slug, chapter: c.id }, props: { book: b, tl, index: i, toc, openCount: open.length } }));
+  }));
+}
+const lang = Astro.params.lang as Lang;
+const { book, tl, index, toc, openCount } = Astro.props;
+const s = t[lang];
+const meta = toc[index];
+const chapter = await loadChapter(book.slug, tl, meta.id);
+const prev = index > 0 ? toc[index - 1] : null;
+const next = index < openCount - 1 ? toc[index + 1] : null;
+const isLastOpen = index === openCount - 1 && openCount < toc.length;
+const terr = territoryOf(book);
+const readUrl = (id: string) => href(lang, `read/${book.slug}/${id}`);
+const bookUrl = href(lang, `books/${book.slug}`);
+---
+<Base lang={lang} title={`${meta.title} · ${book.title[lang]}`} path={`read/${book.slug}/${meta.id}`} chrome={false} description={book.description[lang]}>
+  <div slot="top" class="reader-bar">
+    <div class="wrap reader-bar__row">
+      <a class="brand" href={href(lang)} aria-label="ved·Life"><MarkMini size={22} /><Wordmark /></a>
+      <div class="reader-bar__title"><b>{book.title[lang]}</b><span>{meta.title}</span></div>
+      <div class="tools">
+        <button class="tool" type="button" id="fMinus" aria-label={s.fontSmaller}>A−</button>
+        <button class="tool" type="button" id="fPlus" aria-label={s.fontLarger}>A+</button>
+        <button class="tool" type="button" id="tocBtn"><span class="tool--text">{s.contents}</span><span aria-hidden="true" class="tool-icon">☰</span></button>
+      </div>
+    </div>
+    <div class="thread" aria-hidden="true"><div class="thread__fill" id="thread"></div></div>
+  </div>
+
+  <article class={`reader pig-${terr.pigment}`} id="reader" lang={tl}>
+    <span class="vl-label reader__meta">{s.chapterOf(index + 1, toc.length)} · {meta.minutes} {s.min}{meta.part ? ` · ${meta.part}` : ''}</span>
+    <h1>{meta.title}</h1>
+    <div class="rbody" id="rbody">
+      {chapter?.blocks.map((b) => {
+        const content = b.runs ? b.runs.map((r) => (r.href ? <a href={r.href} target="_blank" rel="noopener">{r.text}</a> : r.text)) : b.text;
+        if (b.type === 'h3') return <h3>{content}</h3>;
+        if (b.type === 'verse') return <p class="verse">{content}</p>;
+        if (b.type === 'cite') return <p class="cite">{content}</p>;
+        if (b.type === 'img') return <figure><img src={b.src} alt={b.caption ?? ''} loading="lazy" />{b.caption && <figcaption>{b.caption}</figcaption>}</figure>;
+        return <p>{content}</p>;
+      })}
+    </div>
+
+    {isLastOpen && (
+      <section class="threshold" aria-labelledby="thr-h">
+        <span class="vl-label vl-label--gold">{s.thresholdLabel} · {s.chapterOf(index + 2, toc.length)}</span>
+        <h2 id="thr-h">{s.thresholdTitle}</h2>
+        <p>{s.thresholdText(openCount)}</p>
+        <div class="hero__actions">
+          <a class="btn btn--paper" href={bookUrl}>{s.toBook}</a>
+          <a class="btn btn--ghost" href={href(lang, 'books')}>{s.allBooks}</a>
+        </div>
+      </section>
+    )}
+
+    <nav class="rnav" aria-label={s.contents}>
+      {prev ? <a href={readUrl(prev.id)} rel="prev"><span class="vl-label vl-label--muted">← {s.prev}</span><b>{prev.title}</b></a> : <a href={bookUrl}><span class="vl-label vl-label--muted">← {s.toBook}</span><b>{book.title[lang]}</b></a>}
+      {next ? <a class="next" href={readUrl(next.id)} rel="next"><span class="vl-label vl-label--muted">{s.next} →</span><b>{next.title}</b></a> : <a class="next" href={bookUrl}><span class="vl-label vl-label--muted">{s.toBook} →</span><b>{book.title[lang]}</b></a>}
+    </nav>
+  </article>
+
+  <dialog class="toc-dialog" id="tocDialog" aria-labelledby="toc-h">
+    <div class="toc-dialog__inner">
+      <div class="toc-dialog__head"><h2 id="toc-h" style="font-size:24px">{s.contents}</h2><button class="tool" type="button" id="tocClose" aria-label={s.close}>✕</button></div>
+      <div class="toc" style="margin-top:0">
+        <ol>
+          {toc.map((c, i) => (
+            <li>{i < openCount
+              ? <a href={readUrl(c.id)} class={c.id === meta.id ? 'cur' : undefined} aria-current={c.id === meta.id ? 'page' : undefined}><span>{c.title}</span><span class="min">{c.minutes} {s.min}</span></a>
+              : <span class="row"><span>{c.title}</span><span class="min">{s.locked}</span></span>}</li>
+          ))}
+        </ol>
+      </div>
+    </div>
+  </dialog>
+
+  <script type="application/json" id="readerVars" set:html={JSON.stringify({ slug: book.slug, lang, chapterId: meta.id, prev: prev ? readUrl(prev.id) : null, next: next ? readUrl(next.id) : null, title: book.title[lang], chapterTitle: meta.title })} />
+  <script>
+    const v = JSON.parse(document.getElementById('readerVars')!.textContent!);
+    const reader = document.getElementById('reader')!;
+    const store = {
+      get(k: string) { try { return localStorage.getItem(k); } catch { return null; } },
+      set(k: string, val: string) { try { localStorage.setItem(k, val); } catch { /* приватный режим */ } },
+    };
+
+    // размер шрифта
+    const SCALES = [0.875, 0.9375, 1, 1.0625, 1.125, 1.25, 1.375];
+    let fi = Math.max(0, SCALES.indexOf(parseFloat(store.get('vl:fontScale') || '1')));
+    const applyScale = () => { reader.style.setProperty('--rscale', String(SCALES[fi])); store.set('vl:fontScale', String(SCALES[fi])); };
+    document.getElementById('fMinus')!.addEventListener('click', () => { fi = Math.max(0, fi - 1); applyScale(); });
+    document.getElementById('fPlus')!.addEventListener('click', () => { fi = Math.min(SCALES.length - 1, fi + 1); applyScale(); });
+    applyScale();
+
+    // оглавление
+    const dlg = document.getElementById('tocDialog') as HTMLDialogElement;
+    document.getElementById('tocBtn')!.addEventListener('click', () => { dlg.showModal(); dlg.querySelector('.cur')?.scrollIntoView({ block: 'center' }); });
+    document.getElementById('tocClose')!.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('click', (e) => { if (e.target === dlg) dlg.close(); });
+
+    // нить прогресса и место чтения (сначала читаем сохранённое, потом пишем)
+    const key = `vl:progress:${v.slug}:${v.lang}`;
+    const thread = document.getElementById('thread')!;
+    let saved: { chapterId: string; fraction: number } | null = null;
+    try { saved = JSON.parse(store.get(key) || 'null'); } catch { saved = null; }
+    const frac = () => { const max = document.documentElement.scrollHeight - innerHeight; return max > 0 ? Math.min(1, Math.max(0, scrollY / max)) : 0; };
+    const save = () => store.set(key, JSON.stringify({ chapterId: v.chapterId, fraction: frac(), title: v.title, chapterTitle: v.chapterTitle, url: location.pathname, at: Date.now() }));
+    let tmr: number | undefined;
+    addEventListener('scroll', () => { thread.style.width = `${frac() * 100}%`; clearTimeout(tmr); tmr = window.setTimeout(save, 400); }, { passive: true });
+    addEventListener('pagehide', save);
+    if (saved && saved.chapterId === v.chapterId && saved.fraction > 0.02) {
+      addEventListener('load', () => setTimeout(() => scrollTo(0, (document.documentElement.scrollHeight - innerHeight) * saved!.fraction), 100));
+    } else { save(); }
+
+    // ← → листают главы
+    addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey || e.shiftKey || dlg.open) return;
+      const tgt = e.target as HTMLElement;
+      if (tgt && (tgt.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(tgt.tagName))) return;
+      if (e.key === 'ArrowRight' && v.next) location.href = v.next;
+      if (e.key === 'ArrowLeft' && v.prev) location.href = v.prev;
+    });
+  </script>
+</Base>

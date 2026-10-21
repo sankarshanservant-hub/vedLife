@@ -1,0 +1,26 @@
+---
+import type { Lang } from '../lib/i18n';
+import { t, href, otherLang } from '../lib/i18n';
+import MarkMini from './MarkMini.astro';
+import Wordmark from './Wordmark.astro';
+interface Props { lang: Lang; current?: 'books' | 'read' | 'about'; altPath?: string }
+const { lang, current, altPath = '' } = Astro.props;
+const s = t[lang];
+const items = [
+  { id: 'books', label: s.nav.books, url: href(lang, 'books') },
+  { id: 'read', label: s.nav.read, url: href(lang, 'read') },
+  { id: 'about', label: s.nav.about, url: href(lang, 'about') },
+];
+---
+<header class="site-header">
+  <div class="wrap site-header__row">
+    <a class="brand" href={href(lang)} aria-label="ved·Life">
+      <MarkMini size={26} />
+      <Wordmark />
+    </a>
+    <nav class="site-nav" aria-label={lang === 'ru' ? 'Разделы' : 'Sections'}>
+      {items.map((i) => <a href={i.url} aria-current={current === i.id ? 'page' : undefined}>{i.label}</a>)}
+    </nav>
+    <a class="lang-switch" href={href(otherLang(lang), altPath)} hreflang={otherLang(lang)} lang={otherLang(lang)}>{s.other}</a>
+  </div>
+</header>

@@ -1,0 +1,22 @@
+---
+// Знак ved·Life: 15 скруглённых квадратов (0°→75°, штрих 1.20→1.70u) и ядро Ø106u
+// на поле 200u — геометрия 1:1 из Brand Guidelines v1.0 (раздел 03).
+// build — проиграть сборку знака один раз при появлении (03b · Motion).
+interface Props { size?: number | string; core?: string; build?: boolean; class?: string; label?: string }
+const { size = 64, core, build = false, class: cls, label } = Astro.props;
+const rings = Array.from({ length: 15 }, (_, i) => {
+  const t = i / 14;
+  return {
+    xy: (25 + 3 * t).toFixed(2), wh: (150 - 6 * t).toFixed(2), rx: (30 - 4 * t).toFixed(2),
+    op: (0.06 + 0.94 * t).toFixed(3), sw: (1.2 + 0.5 * t).toFixed(2), rot: (75 * t).toFixed(2),
+  };
+});
+---
+<svg class:list={['vl-mark', cls]} viewBox="0 0 200 200" width={size} height={size} data-build={build ? '' : undefined}
+  role={label ? 'img' : undefined} aria-label={label} aria-hidden={label ? undefined : 'true'}>
+  {rings.map((r) => (
+    <g class="vl-ring"><rect x={r.xy} y={r.xy} width={r.wh} height={r.wh} rx={r.rx} fill="none" stroke="currentColor"
+      stroke-opacity={r.op} stroke-width={r.sw} transform={`rotate(${r.rot} 100 100)`} /></g>
+  ))}
+  <g class="vl-core"><circle cx="100" cy="100" r="53" fill={core ?? 'currentColor'} /></g>
+</svg>

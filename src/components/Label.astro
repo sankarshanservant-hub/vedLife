@@ -1,0 +1,6 @@
+---
+// Подпись-лейбл широким гротеском (роль Monument Extended).
+interface Props { as?: string; tone?: 'muted' | 'gold' | 'bister' | 'inherit'; class?: string }
+const { as: Tag = 'span', tone = 'bister', class: cls } = Astro.props;
+---
+<Tag class:list={['vl-label', `vl-label--${tone}`, cls]}><slot /></Tag>
