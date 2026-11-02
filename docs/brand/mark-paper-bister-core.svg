@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <title>Vedlife — symbol reversed, bister core</title>
+  <rect x="25.0" y="25.0" width="150.0" height="150.0" rx="30.0" fill="none" stroke="#FAF9F6" stroke-opacity="0.060" stroke-width="1.20" transform="rotate(0.00 100 100)"></rect>
+  <rect x="25.2" y="25.2" width="149.6" height="149.6" rx="29.7" fill="none" stroke="#FAF9F6" stroke-opacity="0.127" stroke-width="1.24" transform="rotate(5.36 100 100)"></rect>
+  <rect x="25.5" y="25.5" width="149.1" height="149.1" rx="29.4" fill="none" stroke="#FAF9F6" stroke-opacity="0.194" stroke-width="1.27" transform="rotate(10.71 100 100)"></rect>
+  <rect x="25.7" y="25.7" width="148.7" height="148.7" rx="29.1" fill="none" stroke="#FAF9F6" stroke-opacity="0.261" stroke-width="1.31" transform="rotate(16.07 100 100)"></rect>
+  <rect x="25.8" y="25.8" width="148.3" height="148.3" rx="28.9" fill="none" stroke="#FAF9F6" stroke-opacity="0.329" stroke-width="1.34" transform="rotate(21.43 100 100)"></rect>
+  <rect x="26.0" y="26.0" width="147.9" height="147.9" rx="28.6" fill="none" stroke="#FAF9F6" stroke-opacity="0.396" stroke-width="1.38" transform="rotate(26.79 100 100)"></rect>
+  <rect x="26.3" y="26.3" width="147.4" height="147.4" rx="28.3" fill="none" stroke="#FAF9F6" stroke-opacity="0.463" stroke-width="1.41" transform="rotate(32.14 100 100)"></rect>
+  <rect x="26.5" y="26.5" width="147.0" height="147.0" rx="28.0" fill="none" stroke="#FAF9F6" stroke-opacity="0.530" stroke-width="1.45" transform="rotate(37.50 100 100)"></rect>
+  <rect x="26.7" y="26.7" width="146.6" height="146.6" rx="27.7" fill="none" stroke="#FAF9F6" stroke-opacity="0.597" stroke-width="1.49" transform="rotate(42.86 100 100)"></rect>
+  <rect x="27.0" y="27.0" width="146.1" height="146.1" rx="27.4" fill="none" stroke="#FAF9F6" stroke-opacity="0.664" stroke-width="1.52" transform="rotate(48.21 100 100)"></rect>
+  <rect x="27.2" y="27.2" width="145.7" height="145.7" rx="27.1" fill="none" stroke="#FAF9F6" stroke-opacity="0.731" stroke-width="1.56" transform="rotate(53.57 100 100)"></rect>
+  <rect x="27.3" y="27.3" width="145.3" height="145.3" rx="26.9" fill="none" stroke="#FAF9F6" stroke-opacity="0.799" stroke-width="1.59" transform="rotate(58.93 100 100)"></rect>
+  <rect x="27.5" y="27.5" width="144.9" height="144.9" rx="26.6" fill="none" stroke="#FAF9F6" stroke-opacity="0.866" stroke-width="1.63" transform="rotate(64.29 100 100)"></rect>
+  <rect x="27.8" y="27.8" width="144.4" height="144.4" rx="26.3" fill="none" stroke="#FAF9F6" stroke-opacity="0.933" stroke-width="1.66" transform="rotate(69.64 100 100)"></rect>
+  <rect x="28.0" y="28.0" width="144.0" height="144.0" rx="26.0" fill="none" stroke="#FAF9F6" stroke-opacity="1.000" stroke-width="1.70" transform="rotate(75.00 100 100)"></rect>
+  <circle cx="100" cy="100" r="53" fill="#6E5740"></circle>
+</svg>

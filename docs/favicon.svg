@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <style>.m{color:#0B0B0C}@media (prefers-color-scheme:dark){.m{color:#FAF9F6}}</style>
+  <g class="m">
+  <rect x="24" y="24" width="152" height="152" rx="30" fill="none" stroke="currentColor" stroke-width="10" transform="rotate(20 100 100)"></rect>
+  <circle cx="100" cy="100" r="54" fill="currentColor"></circle>
+  </g>
+</svg>
