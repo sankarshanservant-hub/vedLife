@@ -3,8 +3,10 @@ import Base from '../../layouts/Base.astro';
 import Mark from '../../components/Mark.astro';
 import Cover from '../../components/Cover.astro';
 import Glyph from '../../components/Glyph.astro';
+import DepthRings from '../../components/DepthRings.astro';
 import { LANGS, t, href, type Lang } from '../../lib/i18n';
-import { BOOKS, TERRITORIES, territoryOf, tocOf, loadChapter, textLang, nextEntry } from '../../lib/catalog';
+import { BOOKS, territoryOf, tocOf, loadChapter, textLang, nextEntry } from '../../lib/catalog';
+import { DOORS, DEPTHS, ENTRIES, BRIEFS, STATUS } from '../../lib/portal';
 
 export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
 const lang = Astro.params.lang as Lang;
@@ -13,19 +15,43 @@ const feature = BOOKS[0];
 const fLang = textLang(feature, lang)!;
 const fToc = tocOf(feature.slug, fLang);
 const prologue = await loadChapter(feature.slug, fLang, fToc[0].id);
-const excerpt = (prologue?.blocks ?? []).filter((b) => b.type === 'p').slice(0, 4);
+const excerpt = (prologue?.blocks ?? []).filter((b) => b.type === 'p').slice(0, 3);
 const fTerr = territoryOf(feature);
+
+const C = {
+  ru: {
+    lead: 'Книги, комиксы, звук, колоды, игры и встречи. Одна культура в разных формах.',
+    toBooks: 'Войти через книгу', toDoors: 'Выбрать дверь',
+    doorsKicker: 'Девять дверей', doorsTitle: 'Книга — одна из дверей.', doorsLead: 'Люди приходят из ленты, с видео, со встречи, из магазина. Каждая дверь ведёт в то же знание и показывает его в своей форме.',
+    open: 'Открыть', depthKicker: 'Глубина', depthTitle: 'Вход определяет глубину.', depthLead: 'Шесть ступеней — шесть колец знака. Человек стоит на той, на которую попал, и видит следующую.',
+    from: 'Откуда пришли', first: 'Что видят первым', next: 'Куда дальше', step: 'ступень',
+    layersKicker: 'Читалка со слоями', layersTitle: 'Один текст, несколько слоёв.', layersLead: 'Источники открыты всем. Иллюстрации, звук и кадры включаются поверх текста — по подписке или с бумажной книгой.', layersCta: 'Открыть читалку со слоями',
+    workKicker: 'Мастерская', workTitle: 'Здесь учатся делать вещи вокруг источника.', workLead: 'Задания, короткие когорты, релизы с договором. Кураторы отвечают за качество и за верность тексту.', workCta: 'Все задания', samples: 'Образец задания',
+    memCta: 'Условия подписки',
+  },
+  en: {
+    lead: 'Books, comics, sound, decks, games and gatherings. One culture in many forms.',
+    toBooks: 'Enter through a book', toDoors: 'Choose a door',
+    doorsKicker: 'Nine doors', doorsTitle: 'A book is one of the doors.', doorsLead: 'People arrive from a feed, a video, a meeting, a shop. Each door leads to the same knowledge and shows it in its own form.',
+    open: 'Open', depthKicker: 'Depth', depthTitle: 'The way in sets the depth.', depthLead: 'Six steps, six rings of the mark. A person stands where they arrived and sees the next step.',
+    from: 'Where they come from', first: 'What they see first', next: 'Where next', step: 'step',
+    layersKicker: 'The layered reader', layersTitle: 'One text, several layers.', layersLead: 'Sources are open to all. Illustration, sound and frames switch on over the text, by subscription or with the paper book.', layersCta: 'Open the layered reader',
+    workKicker: 'The Workshop', workTitle: 'Here people learn to make things around a source.', workLead: 'Briefs, short cohorts, releases under contract. Curators answer for quality and for faithfulness to the text.', workCta: 'All briefs', samples: 'Sample brief',
+    memCta: 'Membership terms',
+  },
+}[lang];
+const doorHref = (d: (typeof DOORS)[number]) => (d.external ? d.href! : d.href ? href(lang, d.href) : undefined);
 ---
-<Base lang={lang} title="ved·Life" description={s.heroLead}>
+<Base lang={lang} title="ved·Life" description={C.lead}>
   <section class="hero">
     <div class="wrap hero__grid">
       <div>
         <span class="vl-label vl-label--gold">ved·Life · {s.tagline}</span>
         <h1>{s.heroTitle}</h1>
-        <p class="hero__lead">{s.heroLead}</p>
+        <p class="hero__lead">{C.lead}</p>
         <div class="hero__actions">
-          <a class="btn btn--paper" href={href(lang, `read/${feature.slug}/${fToc[0].id}`)}>{s.startReading} · {feature.title[lang]}</a>
-          <a class="btn btn--ghost" href={href(lang, 'books')}>{s.allBooks}</a>
+          <a class="btn btn--paper" href={href(lang, `read/${feature.slug}/${fToc[0].id}`)}>{C.toBooks} · {feature.title[lang]}</a>
+          <a class="btn btn--ghost" href="#doors">{C.toDoors}</a>
         </div>
       </div>
       <div class="hero__mark">
@@ -55,6 +81,103 @@ const fTerr = territoryOf(feature);
     </div>
   </section>
 
+  <!-- Девять дверей -->
+  <section class="section wrap" id="doors" aria-labelledby="doors-h">
+    <div class="section__head">
+      <div><span class="vl-label">{C.doorsKicker}</span><h2 id="doors-h">{C.doorsTitle}</h2></div>
+      <p>{C.doorsLead}</p>
+    </div>
+    <div class="doors">
+      {DOORS.map((d) => {
+        const url = doorHref(d);
+        const Tag = url ? 'a' : 'div';
+        return (
+          <Tag class={`door pig-${d.pigment} door--${d.status}`} href={url} target={d.external ? '_blank' : undefined} rel={d.external ? 'noopener' : undefined}>
+            <div class="door__photo"><img src={`/photos/${d.photo}.webp`} alt="" loading="lazy" decoding="async" width="600" height="400" /></div>
+            <div class="door__body">
+              <div class="door__top"><Glyph name={d.glyph} size={56} /><span class={`status status--${d.status}`}>{STATUS[d.status][lang]}</span></div>
+              <span class="vl-label door__label">{d.label[lang]}</span>
+              <h3>{d.title[lang]}</h3>
+              <p>{d.text[lang]}</p>
+              {url && <span class="arrow-link door__go">{C.open} →</span>}
+            </div>
+          </Tag>
+        );
+      })}
+    </div>
+  </section>
+
+  <!-- Глубина по входу -->
+  <section class="section wrap depth" aria-labelledby="depth-h">
+    <div class="section__head">
+      <div><span class="vl-label">{C.depthKicker}</span><h2 id="depth-h">{C.depthTitle}</h2></div>
+      <p>{C.depthLead}</p>
+    </div>
+    <div class="depth__grid">
+      <DepthRings count={DEPTHS.length} />
+      <ol class="depth__list">
+        {DEPTHS.map((d, i) => (
+          <li data-i={i}>
+            <span class="no">{i + 1}</span>
+            <div><b>{d.name[lang]}</b><span>{d.text[lang]}</span></div>
+            <span class={`access${i === 3 ? ' access--paid' : ''}`}>{d.access[lang]}</span>
+          </li>
+        ))}
+      </ol>
+    </div>
+    <table class="entries">
+      <thead><tr><th>{C.from}</th><th>{C.first}</th><th>{C.next}</th><th class="r">{C.step}</th></tr></thead>
+      <tbody>
+        {ENTRIES.map((e) => (
+          <tr><td><b>{e.from[lang]}</b></td><td>{e.first[lang]}</td><td>{e.next[lang]}</td><td class="r"><span class="stepdots" aria-label={`${C.step} ${e.depth + 1}`}>{DEPTHS.map((_, i) => <i class={i <= e.depth ? 'on' : ''}></i>)}</span></td></tr>
+        ))}
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Читалка со слоями -->
+  <section class="section wrap" aria-labelledby="layers-h">
+    <div class="layers-teaser">
+      <div class="layers-teaser__text">
+        <span class="vl-label vl-label--gold">{C.layersKicker}</span>
+        <h2 id="layers-h">{C.layersTitle}</h2>
+        <p>{C.layersLead}</p>
+        <div class="hero__actions">
+          <a class="btn btn--paper" href={href(lang, 'layers')}>{C.layersCta}</a>
+          <a class="btn btn--ghost" href={href(lang, 'membership')}>{C.memCta}</a>
+        </div>
+      </div>
+      <div class="layers-teaser__page" aria-hidden="true">
+        <div class="lt-art"><Cover book={BOOKS[0]} lang={lang} size="sm" class="lt-cover" /></div>
+        <p>{excerpt[0]?.text}</p>
+        <div class="lt-chips"><span>{lang === 'ru' ? 'Источники' : 'Sources'}</span><span class="on">{lang === 'ru' ? 'Иллюстрации' : 'Art'}</span><span class="on">{lang === 'ru' ? 'Звук' : 'Sound'}</span><span>{lang === 'ru' ? 'Кадр' : 'Frame'}</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Мастерская -->
+  <section class="section wrap" aria-labelledby="work-h">
+    <div class="section__head">
+      <div><span class="vl-label">{C.workKicker}</span><h2 id="work-h">{C.workTitle}</h2></div>
+      <p>{C.workLead}</p>
+    </div>
+    <div class="briefs briefs--3">
+      {BRIEFS.slice(0, 3).map((b) => {
+        const door = DOORS.find((d) => d.id === b.door)!;
+        return (
+          <article class={`brief pig-${door.pigment}`}>
+            <div class="brief__top"><Glyph name={door.glyph} size={26} /><span class="vl-label vl-label--muted">{lang === 'ru' ? 'Запись' : 'Entry'} {b.no}</span></div>
+            <span class="vl-label brief__kind">{b.kind[lang]}</span>
+            <h3>{b.title[lang]}</h3>
+            <p>{b.scope[lang]}</p>
+            <span class="brief__reward">{b.reward[lang]}</span>
+          </article>
+        );
+      })}
+    </div>
+    <a class="arrow-link section__more" href={href(lang, 'studio')}>{C.workCta} →</a>
+  </section>
+
   <section class="section wrap" aria-labelledby="index-title">
     <div class="section__head">
       <div><span class="vl-label">ved·Life · 2026</span><h2 id="index-title">{s.indexTitle}</h2></div>
@@ -76,23 +199,6 @@ const fTerr = territoryOf(feature);
         <tr class="open"><td class="no">№ {nextEntry()}</td><td class="title" colspan="2">{s.awaiting}</td><td class="yr">——</td></tr>
       </tbody>
     </table>
-  </section>
-
-  <section class="section wrap" aria-labelledby="terr-title">
-    <div class="section__head"><div><span class="vl-label">{s.territories}</span><h2 id="terr-title" class="sr-only">{s.territories}</h2></div></div>
-    <div class="terr-grid">
-      {TERRITORIES.map((tr) => {
-        const n = BOOKS.filter((b) => b.territory === tr.id).length;
-        return (
-          <a class={`terr-card pig-${tr.pigment}`} href={href(lang, 'books') + '#' + tr.id}>
-            <Glyph name={tr.glyph} size={40} />
-            <h3>{tr.name[lang]}</h3>
-            <p>{tr.about[lang]}</p>
-            <span class="vl-label">{s.books(n)}</span>
-          </a>
-        );
-      })}
-    </div>
   </section>
 
   <section class="manifest">

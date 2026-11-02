@@ -1,19 +1,27 @@
 ---
-// Обложка серии: пигмент территории + паттерн Continuum (P—01, «covers · series»),
-// угловые скобки (D—01) вокруг поля названия, знак внизу слева на 8% ширины.
+// Обложка. Система общая, рисунок у каждой книги свой (см. lib/coverart.ts):
+// поверхность — фон и один пигмент серии (08c), панель с названием стоит на чистом поле
+// (12b), угловые скобки D—01 принимают цвет того, что заключают, знак внизу занимает 8 % ширины.
 import type { Book } from '../lib/catalog';
 import { territoryOf } from '../lib/catalog';
 import type { Lang } from '../lib/i18n';
+import { coverArt, GROUND, W, H } from '../lib/coverart';
 import MarkMini from './MarkMini.astro';
 interface Props { book: Book; lang: Lang; size?: 'sm' | 'md' | 'lg'; class?: string }
 const { book, lang, size = 'md', class: cls } = Astro.props;
 const terr = territoryOf(book);
+const { art, ground, plate } = book.cover;
+const g = GROUND[ground];
+const svg = coverArt(art, ground, terr.pigment);
+const longest = Math.max(...book.title[lang].split(/\s+/).map((w) => w.length));
+const tscale = longest > 11 ? 'long' : longest > 8 ? 'mid' : 'short';
 ---
-<div class:list={['cover', `cover--${size}`, `pig-${terr.pigment}`, cls]} role="img"
+<div class:list={['cover', `cover--${size}`, `cover--g-${ground}`, `cover--p-${plate}`, `cover--t-${tscale}`, `pig-${terr.pigment}`, cls]} role="img"
+  style={`--cg:${g.ground};--ct:${g.text};--cb:${g.bracket}`}
   aria-label={`${book.title[lang]} — ${book.author[lang]}`}>
-  <div class="cover__pattern" aria-hidden="true"></div>
+  <svg class="cover__art" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid slice" aria-hidden="true" set:html={svg} />
   <div class="cover__top" aria-hidden="true"><span>№ {book.entry}</span><span>{terr.name[lang]}</span></div>
-  <div class="cover__field" aria-hidden="true">
+  <div class="cover__plate" aria-hidden="true">
     <div class="cover__title">{book.title[lang]}</div>
     {book.subtitle?.[lang] && <div class="cover__subtitle">{book.subtitle[lang]}</div>}
   </div>

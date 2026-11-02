@@ -4,10 +4,10 @@ export const LANGS: Lang[] = ['ru', 'en'];
 export const t = {
   ru: {
     tagline: 'Издательство и культура',
-    descriptor: 'Сохранение через преображение',
-    nav: { books: 'Книги', read: 'Читать', about: 'О ved·Life' },
+    descriptor: 'Сохранение через трансформацию',
+    nav: { books: 'Книги', read: 'Читать', studio: 'Мастерская', membership: 'Подписка', about: 'О ved·Life' },
     other: 'EN',
-    heroTitle: 'Древнее знание, прожитое сейчас.',
+    heroTitle: 'Древнее знание, живое сейчас.',
     heroLead: 'Книги Свами Авадхута и ведическая традиция в изданиях для современного читателя. Читайте первые главы прямо здесь.',
     startReading: 'Начать читать',
     allBooks: 'Все книги',
@@ -58,7 +58,7 @@ export const t = {
   en: {
     tagline: 'Publishing & Culture',
     descriptor: 'Preservation Through Transformation',
-    nav: { books: 'Books', read: 'Read', about: 'About' },
+    nav: { books: 'Books', read: 'Read', studio: 'Workshop', membership: 'Membership', about: 'About' },
     other: 'RU',
     heroTitle: 'Ancient knowledge, lived now.',
     heroLead: 'Books by Swami Avadhut and the Vedic tradition, edited and designed for the present reader. Read the first chapters right here.',

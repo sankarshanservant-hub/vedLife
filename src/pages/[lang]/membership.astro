@@ -1,0 +1,86 @@
+---
+// Подписка. Прототип показывает устройство, а не цены: что открыто всем, что даёт подписка,
+// как бумажная книга открывает слои. Условия не утверждены.
+import Base from '../../layouts/Base.astro';
+import Mark from '../../components/Mark.astro';
+import { LANGS, href, type Lang } from '../../lib/i18n';
+import { TIERS, MATRIX } from '../../lib/portal';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const U = {
+  ru: {
+    kicker: 'Подписка', proto: 'Прототип · условия не утверждены', h1: 'Источник открыт. Слои — по подписке.',
+    lead: 'Подписка оплачивает работу над слоями: иллюстрации, звук, кадры, аудио. Тексты и их источники остаются открытыми.',
+    tiers: 'Три уровня', matrix: 'Что в каждом уровне', row: 'Слой', yes: 'Есть', part: 'Часть', no: 'Нет',
+    paperK: 'Бумага и экран', paperH: 'Бумажная книга открывает слои.', paperP: 'В каждой книге внутри — код. Он навсегда открывает слои этой книги в читалке, без подписки. Покупка бумаги не конкурирует с цифрой: она её продолжает.',
+    paperC: 'Код книги', paperDemo: 'Попробовать в читалке', ruleK: 'Правило', ruleH: 'Деньги идут к тем, кто делает слои.', ruleP: 'Предложение: часть подписки делится между авторами слоёв по тому, как их читают. Доли уточняются с кураторами.',
+  },
+  en: {
+    kicker: 'Membership', proto: 'Prototype · terms not final', h1: 'The source is open. Layers by subscription.',
+    lead: 'A subscription pays for the work on layers: illustration, sound, frames, audio. Texts and their sources stay open.',
+    tiers: 'Three levels', matrix: 'What each level holds', row: 'Layer', yes: 'Yes', part: 'Part', no: 'No',
+    paperK: 'Paper and screen', paperH: 'A paper book opens its layers.', paperP: 'Every book carries a code inside. It opens that book’s layers in the reader for good, no subscription needed. Buying paper does not compete with digital: it carries it on.',
+    paperC: 'Book code', paperDemo: 'Try it in the reader', ruleK: 'The rule', ruleH: 'Money goes to those who make the layers.', ruleP: 'Proposal: part of each subscription is shared among layer authors by how they are read. Shares are settled with curators.',
+  },
+}[lang];
+const mark = (v: number) => (v === 1 ? U.yes : v === 2 ? U.part : U.no);
+---
+<Base lang={lang} title={U.kicker} path="membership" current="membership" description={U.lead}>
+  <div class="wrap">
+    <div class="page-head">
+      <span class="vl-label">{U.kicker} · <span class="proto">{U.proto}</span></span>
+      <h1>{U.h1}</h1>
+      <p>{U.lead}</p>
+    </div>
+
+    <section class="section" aria-labelledby="tiers-h">
+      <h2 id="tiers-h" class="sr-only">{U.tiers}</h2>
+      <div class="tiers">
+        {TIERS.map((tr, i) => (
+          <article class={`tier tier--${tr.id}`}>
+            <span class="vl-label tier__no">{String(i + 1).padStart(2, '0')}</span>
+            <h3>{tr.name[lang]}</h3>
+            <p class="tier__who">{tr.who[lang]}</p>
+            <ul>{tr.items.map((it) => <li>{it[lang]}</li>)}</ul>
+          </article>
+        ))}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="matrix-h">
+      <div class="section__head"><div><span class="vl-label">{U.matrix}</span><h2 id="matrix-h" class="sr-only">{U.matrix}</h2></div></div>
+      <div class="tscroll">
+        <table class="matrix">
+          <thead><tr><th>{U.row}</th>{TIERS.map((tr) => <th>{tr.name[lang]}</th>)}</tr></thead>
+          <tbody>
+            {MATRIX.map((r) => (
+              <tr><th scope="row">{r.row[lang]}</th>{r.vals.map((v) => <td class={`m${v}`}><span class="dot" aria-hidden="true"></span><span class="sr-only">{mark(v)}</span><span class="m__t" aria-hidden="true">{v === 2 ? U.part : ''}</span></td>)}</tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="section paper" aria-labelledby="paper-h">
+      <div class="paper__text">
+        <span class="vl-label">{U.paperK}</span>
+        <h2 id="paper-h">{U.paperH}</h2>
+        <p>{U.paperP}</p>
+        <a class="btn btn--ink" href={href(lang, 'layers')}>{U.paperDemo}</a>
+      </div>
+      <div class="codecard" aria-hidden="true">
+        <Mark size={72} />
+        <div class="codecard__no vl-label">{U.paperC}</div>
+        <div class="codecard__code">VL-001-7K2Q</div>
+        <div class="codecard__foot vl-label">ved·Life · № 001</div>
+      </div>
+    </section>
+
+    <section class="section rule" aria-labelledby="rule-h">
+      <span class="vl-label">{U.ruleK}</span>
+      <h2 id="rule-h">{U.ruleH}</h2>
+      <p>{U.ruleP}</p>
+    </section>
+  </div>
+</Base>

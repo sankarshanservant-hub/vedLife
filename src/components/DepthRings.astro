@@ -1,0 +1,18 @@
+---
+// Лестница глубины в кольцах знака. Ступеней столько, сколько колец; чем глубже, тем плотнее линия.
+// Квадрат — записанный текст, к центру он проходит весь путь становления (01 · Концепция).
+interface Props { count?: number }
+const { count = 6 } = Astro.props;
+const rings = Array.from({ length: count }, (_, i) => {
+  const t = i / (count - 1);
+  const inset = 6 + i * (64 / count);
+  return { i, x: inset, w: 200 - inset * 2, rot: t * 75, sw: 1.4 + t * 3.2, rx: 34 - t * 12 };
+});
+---
+<svg class="depth-rings" viewBox="0 0 200 200" role="img" aria-label="Depth">
+  {rings.map((r) => (
+    <rect class="ring" data-i={r.i} x={r.x} y={r.x} width={r.w} height={r.w} rx={r.rx} fill="none" stroke="currentColor"
+      stroke-width={r.sw} transform={`rotate(${r.rot} 100 100)`} />
+  ))}
+  <circle class="core" cx="100" cy="100" r="9" fill="currentColor" />
+</svg>

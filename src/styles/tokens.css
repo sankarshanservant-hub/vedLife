@@ -19,7 +19,7 @@
 :root {
   /* Основа: чернила на бумаге */
   --ink: #0B0B0C;
-  --paper: #FAF9F6;
+  --paper: #F6F1E7; /* единственная бумага (08 · Цвет) */
   --graphite: #444444;
   --ash: #191919;
   --oat: #E6E2D6;
@@ -55,7 +55,7 @@
   --wide-weight: 700;
 
   --size-hero: clamp(44px, 7vw, 104px);
-  --size-h1: clamp(38px, 5.4vw, 76px);
+  --size-h1: clamp(33px, 5.4vw, 76px);
   --size-h2: clamp(28px, 3.4vw, 44px);
   --size-h3: 22px;
   --size-body: 18px;

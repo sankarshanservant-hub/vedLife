@@ -2,6 +2,7 @@
 // Тексты глав лежат в src/content/books/<slug>/<lang>/ (см. scripts/import-docx.py).
 
 import type { Lang } from './i18n';
+import type { Art, Ground } from './coverart';
 
 export type Pigment = 'indigo' | 'terracotta' | 'tulasi' | 'marigold' | 'bister';
 
@@ -31,6 +32,8 @@ export type Book = {
   audio?: Partial<Record<Lang, 'available' | 'soon'>>;
   stores?: { name: string; url: string; lang: Lang }[];
   note?: Partial<Record<Lang, string>>;
+  // обложка: рисунок книги, поверхность и положение панели с названием
+  cover: { art: Art; ground: Ground; plate: 'top' | 'mid' | 'bottom' };
 };
 
 export const TERRITORIES: Territory[] = [
@@ -89,6 +92,7 @@ export const BOOKS: Book[] = [
       ru: 'Диалоги Учителя и учеников о дхарме — пути через поле битвы собственной жизни. По преданию, этот текст нашли монахи, возвращавшиеся из Индии в Китай.',
       en: 'Dialogues between a Master and his students on dharma — the path across the battlefield of one’s own life. Legend says monks found the text on their way home from India to China.',
     },
+    cover: { art: { kind: 'field', seed: 1108 }, ground: 'indigo', plate: 'bottom' },
     texts: ['ru', 'en'],
     freeChapters: 5,
     status: 'reading',
@@ -105,6 +109,7 @@ export const BOOKS: Book[] = [
       ru: 'Беседы о Святом Имени за тридцать с лишним лет, собранные в одну книгу: короткие истории в десяти частях.',
       en: 'Thirty-odd years of talks on the Holy Name, gathered into one book of short stories in ten parts.',
     },
+    cover: { art: { kind: 'ripple', seed: 2207 }, ground: 'ink', plate: 'bottom' },
     texts: ['ru'],
     freeChapters: 12,
     status: 'reading',
@@ -121,6 +126,7 @@ export const BOOKS: Book[] = [
       ru: 'Притча о караване на тракте между Индией и Китаем и об Отшельнике, который отвечает на главный вопрос: почему мир, устроенный справедливо, так часто кажется несправедливым.',
       en: 'A parable of a caravan on the road between India and China, and of a hermit who answers one question: why a world built on justice so often looks unjust.',
     },
+    cover: { art: { kind: 'accumulation', seed: 3301 }, ground: 'oat', plate: 'top' },
     texts: ['ru'],
     freeChapters: 3,
     status: 'reading',
@@ -137,6 +143,7 @@ export const BOOKS: Book[] = [
       ru: 'Веды о Боге, мире и человеке: почему мир похож на сложную игру, зачем человеку дано тело и что в нас роднит нас с Абсолютом.',
       en: 'The Vedas on God, the world and the person: why the world resembles a complex game, why we are given a human body, and what in us is akin to the Absolute.',
     },
+    cover: { art: { kind: 'board', seed: 4402 }, ground: 'tulasi', plate: 'mid' },
     texts: [],
     freeChapters: 0,
     status: 'soon',
@@ -153,6 +160,7 @@ export const BOOKS: Book[] = [
       ru: 'Роман-притча в декорациях старого Китая: принц царства Чанлинь, демоны и магия — и путь, который лежит за ними.',
       en: 'A novel-parable set in old China: a prince of the Changlin kingdom, demons and magic, and the path that lies beyond them.',
     },
+    cover: { art: { kind: 'truchet', seed: 5513 }, ground: 'ink', plate: 'bottom' },
     texts: ['ru'],
     freeChapters: 3,
     status: 'reading',

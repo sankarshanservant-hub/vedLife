@@ -3,12 +3,14 @@ import type { Lang } from '../lib/i18n';
 import { t, href, otherLang } from '../lib/i18n';
 import MarkMini from './MarkMini.astro';
 import Wordmark from './Wordmark.astro';
-interface Props { lang: Lang; current?: 'books' | 'read' | 'about'; altPath?: string }
+interface Props { lang: Lang; current?: 'books' | 'read' | 'studio' | 'membership' | 'about'; altPath?: string }
 const { lang, current, altPath = '' } = Astro.props;
 const s = t[lang];
 const items = [
   { id: 'books', label: s.nav.books, url: href(lang, 'books') },
   { id: 'read', label: s.nav.read, url: href(lang, 'read') },
+  { id: 'studio', label: s.nav.studio, url: href(lang, 'studio') },
+  { id: 'membership', label: s.nav.membership, url: href(lang, 'membership') },
   { id: 'about', label: s.nav.about, url: href(lang, 'about') },
 ];
 ---

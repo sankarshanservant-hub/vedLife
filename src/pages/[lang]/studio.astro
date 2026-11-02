@@ -1,0 +1,116 @@
+---
+// Мастерская: место, где авторы, художники, дизайнеры и музыканты пробуют себя вокруг общего источника.
+// Лестница «задание → мастерская → релиз → резиденция» — как у открытых платформ (itch.io, Webtoon Canvas),
+// но с кураторами и сверкой с источником.
+import Base from '../../layouts/Base.astro';
+import Glyph from '../../components/Glyph.astro';
+import { LANGS, type Lang } from '../../lib/i18n';
+import { DOORS, BRIEFS, WORKSHOP_STEPS } from '../../lib/portal';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const U = {
+  ru: {
+    kicker: 'Мастерская', proto: 'Прототип · условия не утверждены', h1: 'Делать вещи вокруг источника.',
+    lead: 'Художники, музыканты, дизайнеры и авторы работают над общим каноном под руководством кураторов. Здесь можно попробовать себя и выйти в издание.',
+    ladder: 'Четыре шага', briefs: 'Открытые задания', briefsH: 'Сегодня нужны эти работы.', briefsLead: 'Образцы заданий. Каждое привязано к территории и к конкретной книге. Номер — запись в летописи.',
+    sample: 'Образец',
+    howK: 'Как это держится', how: [
+      ['Куратор', 'У каждой территории свой куратор. Он открывает задания, ведёт когорту и отвечает за качество.'],
+      ['Совет по источникам', 'Каждая работа сверяется с текстом: стих назван, перевод подписан. Пересказ на место источника не ставится.'],
+      ['Права и доли', 'Права на работу остаются у автора. Издательство получает лицензию на форму. Доля и срок — в договоре. Это предложение, не условия.'],
+      ['Один путь в карточке', 'Заявка, когорта и релиз видны в одной карточке человека — в той же панели, что и у волонтёров. Данные хранятся в регионе автора.'],
+    ],
+    applyK: 'Заявка', applyH: 'Рассказать о себе.', name: 'Имя', link: 'Ссылка на работы', where: 'Что вам ближе', consent: 'Согласен(на), чтобы со мной связались кураторы.', send: 'Отправить', thanks: 'Заявка принята. Прототип не отправляет данные, но форма показывает, что мы спрашиваем.',
+    only: 'Только то, что нужно, чтобы начать разговор.',
+  },
+  en: {
+    kicker: 'The Workshop', proto: 'Prototype · terms not final', h1: 'Making things around a source.',
+    lead: 'Artists, musicians, designers and writers work on a shared canon under curators. Here you can try your hand and reach print.',
+    ladder: 'Four steps', briefs: 'Open briefs', briefsH: 'These works are needed now.', briefsLead: 'Sample briefs. Each is tied to a territory and a particular book. The number is an entry in the chronicle.',
+    sample: 'Sample',
+    howK: 'How it holds together', how: [
+      ['A curator', 'Each territory has its own curator. They open briefs, lead the cohort and answer for quality.'],
+      ['A source council', 'Every work is checked against the text: the verse is named, the translation signed. A retelling never stands in for a source.'],
+      ['Rights and shares', 'Rights to a work stay with its author. The press takes a licence for the form. Share and term are in the contract. This is a proposal, not terms.'],
+      ['One path in one card', 'Application, cohort and release show in one person’s card, in the same panel the volunteers use. Data stays in the author’s region.'],
+    ],
+    applyK: 'Application', applyH: 'Tell us about yourself.', name: 'Name', link: 'Link to your work', where: 'What is closest to you', consent: 'I agree that curators may contact me.', send: 'Send', thanks: 'Application received. The prototype sends no data, but the form shows what we ask.',
+    only: 'Only what is needed to start a conversation.',
+  },
+}[lang];
+---
+<Base lang={lang} title={lang === 'ru' ? 'Мастерская' : 'The Workshop'} path="studio" current="studio" description={U.lead}>
+  <div class="wrap">
+    <div class="page-head">
+      <span class="vl-label">{U.kicker} · <span class="proto">{U.proto}</span></span>
+      <h1>{U.h1}</h1>
+      <p>{U.lead}</p>
+    </div>
+
+    <section class="section" aria-labelledby="ladder-h">
+      <div class="section__head"><div><span class="vl-label">{U.ladder}</span><h2 id="ladder-h" class="sr-only">{U.ladder}</h2></div></div>
+      <ol class="ladder">
+        {WORKSHOP_STEPS.map((st, i) => (
+          <li><span class="ladder__no">{String(i + 1).padStart(2, '0')}</span><b>{st.name[lang]}</b><p>{st.text[lang]}</p></li>
+        ))}
+      </ol>
+    </section>
+
+    <section class="section" aria-labelledby="briefs-h">
+      <div class="section__head">
+        <div><span class="vl-label">{U.briefs}</span><h2 id="briefs-h">{U.briefsH}</h2></div>
+        <p>{U.briefsLead}</p>
+      </div>
+      <div class="briefs">
+        {BRIEFS.map((b) => {
+          const d = DOORS.find((x) => x.id === b.door)!;
+          return (
+            <article class={`brief pig-${d.pigment}`}>
+              <div class="brief__top"><Glyph name={d.glyph} size={26} /><span class="vl-label vl-label--muted">{lang === 'ru' ? 'Запись' : 'Entry'} {b.no}</span></div>
+              <span class="vl-label brief__kind">{b.kind[lang]}</span>
+              <h3>{b.title[lang]}</h3>
+              <p>{b.scope[lang]}</p>
+              <span class="brief__reward">{b.reward[lang]}</span>
+            </article>
+          );
+        })}
+      </div>
+    </section>
+
+    <section class="section" aria-labelledby="how-h">
+      <div class="section__head"><div><span class="vl-label">{U.howK}</span><h2 id="how-h" class="sr-only">{U.howK}</h2></div></div>
+      <div class="how">
+        {U.how.map(([h, p]) => <div><h3>{h}</h3><p>{p}</p></div>)}
+      </div>
+    </section>
+
+    <section class="section" id="apply" aria-labelledby="apply-h">
+      <div class="apply">
+        <div><span class="vl-label">{U.applyK}</span><h2 id="apply-h">{U.applyH}</h2><p class="apply__only">{U.only}</p></div>
+        <form class="apply__form" data-apply>
+          <label>{U.name}<input name="name" required autocomplete="name" /></label>
+          <label>{U.link}<input name="link" type="url" inputmode="url" placeholder="https://" /></label>
+          <fieldset>
+            <legend>{U.where}</legend>
+            <div class="chips">
+              {DOORS.map((d) => <label class="chip chip--check"><input type="checkbox" name="where" value={d.id} /><Glyph name={d.glyph} size={18} />{d.title[lang]}</label>)}
+            </div>
+          </fieldset>
+          <label class="check"><input type="checkbox" required /> {U.consent}</label>
+          <button class="btn btn--ink" type="submit">{U.send}</button>
+          <p class="apply__thanks" role="status" hidden>{U.thanks}</p>
+        </form>
+      </div>
+    </section>
+  </div>
+</Base>
+
+<script>
+  const f = document.querySelector<HTMLFormElement>('[data-apply]');
+  f?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    f.querySelector<HTMLElement>('.apply__thanks')!.hidden = false;
+    f.querySelectorAll('button[type=submit]').forEach((b) => ((b as HTMLButtonElement).disabled = true));
+  });
+</script>

@@ -1,0 +1,228 @@
+---
+// Читалка со слоями — демонстрация. Текст — пролог «Дхарма Гиты», слои — образцы.
+// Источники открыты всем; иллюстрации, звук и кадры включаются подпиской или кодом из бумажной книги.
+import Base from '../../layouts/Base.astro';
+import { LANGS, href, type Lang } from '../../lib/i18n';
+import { BOOKS, tocOf, loadChapter, textLang } from '../../lib/catalog';
+import { LAYERS } from '../../lib/portal';
+import { coverArt, GROUND } from '../../lib/coverart';
+
+export function getStaticPaths() { return LANGS.map((lang) => ({ params: { lang } })); }
+const lang = Astro.params.lang as Lang;
+const book = BOOKS[0];
+const tl = textLang(book, lang)!;
+const toc = tocOf(book.slug, tl);
+const chapter = await loadChapter(book.slug, tl, toc[0].id);
+const paras = (chapter?.blocks ?? []).filter((b) => b.type === 'p').slice(0, 5).map((b) => b.text ?? '');
+
+const U = {
+  ru: {
+    title: 'Читалка со слоями', kicker: 'Демонстрация', lead: 'Тот же пролог, четыре слоя. Источники открыты всем, остальное включается подпиской или кодом из бумажной книги.',
+    as: 'Смотреть как', reader: 'Читатель', plus: 'Подписчик', layers: 'Слои', paidTag: 'подписка', freeTag: 'открыто', locked: 'Слой доступен по подписке или с бумажной книгой.',
+    code: 'Код из бумажной книги', codePh: 'VL-001-…', apply: 'Применить', codeOk: 'Код принят: слои книги открыты навсегда.', codeBad: 'Код начинается с VL- и номера книги.',
+    soundOn: 'Звук включён. Колокол звучит на входе в сцену.', soundHint: 'Звук запускается после нажатия: браузеры не играют его сами.',
+    notes: 'Источники и примечания', sample: 'Образец слоя', figArt: 'Образец слоя. Рисунок собран из системы ved·Life; в издании здесь работа приглашённого автора.', figFrame: 'Образец слоя. Кадр из дороги; в издании — видео или фото, связанное с местом в тексте.',
+    prototype: 'Прототип', back: 'К книге', n: [
+      'Индия — место, откуда возвращаются монахи. Образец примечания: в издании здесь стоит ссылка на источник и карта.',
+      'Название — перевод издательства. Образец примечания: дата и редактор перевода указываются в колофоне.',
+      '«Искусство войны» — трактат Сунь-цзы. Здесь это отсылка, а не цитата. Образец примечания.',
+    ],
+  },
+  en: {
+    title: 'The layered reader', kicker: 'Demonstration', lead: 'The same prologue, four layers. Sources are open to all; the rest switch on with a subscription or a code from the paper book.',
+    as: 'View as', reader: 'Reader', plus: 'Subscriber', layers: 'Layers', paidTag: 'subscription', freeTag: 'open', locked: 'This layer comes with a subscription or the paper book.',
+    code: 'Code from the paper book', codePh: 'VL-001-…', apply: 'Apply', codeOk: 'Code accepted: this book’s layers are open for good.', codeBad: 'A code starts with VL- and the book number.',
+    soundOn: 'Sound is on. A bell rings as a scene begins.', soundHint: 'Sound starts after a click: browsers do not play it on their own.',
+    notes: 'Sources and notes', sample: 'Sample layer', figArt: 'Sample layer. The drawing is built from the ved·Life system; in the edition this is the work of an invited artist.', figFrame: 'Sample layer. A frame from the road; in the edition, a film or photograph tied to a place in the text.',
+    prototype: 'Prototype', back: 'Book page', n: [
+      'India is where the monks are returning from. Sample note: in the edition this holds a source reference and a map.',
+      'The title is the press’s translation. Sample note: the date and the editor of the translation are given in the colophon.',
+      '“The Art of War” is Sun Tzu’s treatise. Here it is a reference, not a quotation. Sample note.',
+    ],
+  },
+}[lang];
+
+// Привязка примечаний к словам. Ищем первое вхождение в абзаце и не трогаем остальной текст.
+const NOTE_KEYS: RegExp[] = lang === 'ru' ? [/Инди[юи]/, /Песнь Пути/, /Искусство войны/] : [/India/, /Song of the Way/, /The Art of War/];
+const esc = (x: string) => x.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+const used = new Set<number>();
+const html = paras.map((p) => {
+  let out = esc(p);
+  NOTE_KEYS.forEach((k, i) => {
+    if (used.has(i)) return;
+    const m = out.match(k);
+    if (m) { used.add(i); out = out.replace(k, (w) => `<a class="rnote" href="#n${i + 1}" id="r${i + 1}">${w}<sup>${i + 1}</sup></a>`); }
+  });
+  return out;
+});
+const artSvg = coverArt({ kind: 'field', seed: 1108 }, 'indigo', 'indigo');
+const artSvg2 = coverArt({ kind: 'accumulation', seed: 3301 }, 'oat', 'indigo');
+---
+<Base lang={lang} title={U.title} path="layers" current="read" description={U.lead}>
+  <div class="wrap lr" data-layers data-role="reader">
+    <div class="page-head lr__head">
+      <span class="vl-label">{U.kicker} · <span class="proto">{U.prototype}</span></span>
+      <h1>{U.title}</h1>
+      <p>{U.lead}</p>
+    </div>
+
+    <div class="lr__grid">
+      <aside class="lr__panel" aria-label={U.layers}>
+        <div class="lr__block">
+          <span class="vl-label vl-label--muted">{U.as}</span>
+          <div class="seg" role="radiogroup" aria-label={U.as}>
+            <button class="seg__b is-on" role="radio" aria-checked="true" data-role-set="reader">{U.reader}</button>
+            <button class="seg__b" role="radio" aria-checked="false" data-role-set="plus">{U.plus}</button>
+          </div>
+        </div>
+        <div class="lr__block">
+          <span class="vl-label vl-label--muted">{U.layers}</span>
+          <ul class="lr__layers">
+            {LAYERS.map((l) => (
+              <li data-layer={l.id} data-paid={l.paid ? '1' : '0'}>
+                <label>
+                  <input type="checkbox" data-toggle={l.id} checked={!l.paid} />
+                  <span class="sw" aria-hidden="true"></span>
+                  <span class="lr__lname"><b>{l.name[lang]}</b><small>{l.text[lang]}</small></span>
+                  <span class={`tag ${l.paid ? 'tag--paid' : ''}`}>{l.paid ? U.paidTag : U.freeTag}</span>
+                </label>
+              </li>
+            ))}
+          </ul>
+          <p class="lr__lock" hidden data-lock>{U.locked}</p>
+          <p class="lr__hint" data-sound-hint hidden>{U.soundHint}</p>
+          <p class="lr__hint lr__hint--on" data-sound-on hidden>{U.soundOn}</p>
+        </div>
+        <form class="lr__block lr__code" data-code>
+          <label class="vl-label vl-label--muted" for="code">{U.code}</label>
+          <div class="lr__codeRow"><input id="code" name="code" placeholder={U.codePh} autocomplete="off" /><button class="btn btn--ink" type="submit">{U.apply}</button></div>
+          <p class="lr__hint" data-code-msg role="status"></p>
+        </form>
+        <a class="arrow-link" href={href(lang, `books/${book.slug}`)}>← {U.back}</a>
+      </aside>
+
+      <article class="lr__text reader" style="padding:0;margin:0;max-width:none">
+        <div class="reader__meta vl-label">№ {book.entry} · {book.title[lang]} · {chapter?.title}</div>
+        <h2 class="lr__h">{chapter?.title}</h2>
+        <div class="rbody">
+          {html.map((h, i) => (
+            <>
+              <p data-bell={i === 0 || i === 2 ? '1' : undefined} set:html={h} />
+              {i === 1 && (
+                <figure class="layer layer--art" data-fig="art">
+                  <svg viewBox="0 36 105 66" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={`background:${GROUND.indigo.ground}`} set:html={artSvg} />
+                  <figcaption><span class="tag tag--paid">{U.sample}</span> {U.figArt}</figcaption>
+                </figure>
+              )}
+              {i === 3 && (
+                <figure class="layer layer--frame" data-fig="frame">
+                  <img src="/photos/road-kirtan.webp" alt="" loading="lazy" width="900" height="520" />
+                  <figcaption><span class="tag tag--paid">{U.sample}</span> {U.figFrame}</figcaption>
+                </figure>
+              )}
+              {i === 4 && (
+                <figure class="layer layer--art" data-fig="art">
+                  <svg viewBox="0 36 105 66" preserveAspectRatio="xMidYMid slice" aria-hidden="true" style={`background:${GROUND.oat.ground}`} set:html={artSvg2} />
+                  <figcaption><span class="tag tag--paid">{U.sample}</span> {U.figArt}</figcaption>
+                </figure>
+              )}
+            </>
+          ))}
+        </div>
+        <section class="layer layer--notes" data-fig="notes" aria-labelledby="notes-h">
+          <h3 id="notes-h" class="vl-label">{U.notes}</h3>
+          <ol>
+            {U.n.map((n, i) => <li id={`n${i + 1}`}>{n} <a href={`#r${i + 1}`} aria-label="↩">↩</a></li>)}
+          </ol>
+        </section>
+      </article>
+    </div>
+  </div>
+</Base>
+
+<script>
+  const root = document.querySelector<HTMLElement>('[data-layers]')!;
+  const toggles = [...root.querySelectorAll<HTMLInputElement>('[data-toggle]')];
+  const figs = [...root.querySelectorAll<HTMLElement>('[data-fig]')];
+  const lockMsg = root.querySelector<HTMLElement>('[data-lock]')!;
+  const hintOff = root.querySelector<HTMLElement>('[data-sound-hint]')!;
+  const hintOn = root.querySelector<HTMLElement>('[data-sound-on]')!;
+  let role: 'reader' | 'plus' = 'reader';
+  let unlocked = false;
+  const on: Record<string, boolean> = { notes: true, art: false, sound: false, frame: false };
+  const isPaid = (id: string) => root.querySelector(`[data-layer="${id}"]`)?.getAttribute('data-paid') === '1';
+  const open = () => role === 'plus' || unlocked;
+
+  /* --- звук: тихая среда и колокол. Всё собирается в браузере, файлов нет --- */
+  let ctx: AudioContext | null = null, master: GainNode | null = null, oscs: OscillatorNode[] = [];
+  function startSound() {
+    if (master) return;
+    ctx ??= new AudioContext();
+    void ctx.resume();
+    master = ctx.createGain(); master.gain.value = 0; master.connect(ctx.destination);
+    [[110, .5], [164.81, .3], [220.4, .16], [329.6, .06]].forEach(([f, a], i) => {
+      const o = ctx!.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx!.createGain(); g.gain.value = a;
+      const lfo = ctx!.createOscillator(); lfo.frequency.value = 0.05 + i * 0.03;
+      const lg = ctx!.createGain(); lg.gain.value = a * 0.35; lfo.connect(lg).connect(g.gain);
+      o.connect(g).connect(master!); o.start(); lfo.start(); oscs.push(o, lfo);
+    });
+    master.gain.linearRampToValueAtTime(0.07, ctx.currentTime + 3);
+  }
+  function stopSound() {
+    if (!master || !ctx) return;
+    const m = master, c = ctx, list = oscs;
+    m.gain.cancelScheduledValues(c.currentTime); m.gain.linearRampToValueAtTime(0, c.currentTime + 1);
+    master = null; oscs = [];
+    setTimeout(() => { list.forEach((o) => { try { o.stop(); } catch {} }); m.disconnect(); }, 1200);
+  }
+  function bell() {
+    if (!ctx || !master) return;
+    const t = ctx.currentTime;
+    ([[880, 1], [1318.5, .42], [1760, .2], [2637, .08]] as const).forEach(([f, a]) => {
+      const o = ctx!.createOscillator(); o.type = 'sine'; o.frequency.value = f;
+      const g = ctx!.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.05 * a, t + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 3.6);
+      o.connect(g).connect(ctx!.destination); o.start(t); o.stop(t + 3.8);
+    });
+  }
+  const seen = new WeakSet<Element>();
+  const io = 'IntersectionObserver' in window ? new IntersectionObserver((es) => {
+    es.forEach((e) => { if (e.isIntersecting && !seen.has(e.target) && master) { seen.add(e.target); bell(); } });
+  }, { threshold: 0.7 }) : null;
+  root.querySelectorAll('[data-bell]').forEach((p) => io?.observe(p));
+
+  function apply() {
+    root.dataset.role = role;
+    let anyLocked = false;
+    toggles.forEach((t) => {
+      const id = t.dataset.toggle!, paid = isPaid(id);
+      const locked = paid && !open();
+      t.disabled = locked;
+      if (locked) { t.checked = false; if (on[id]) on[id] = false; anyLocked = true; }
+      else t.checked = on[id];
+      t.closest('li')!.classList.toggle('is-locked', locked);
+    });
+    lockMsg.hidden = !anyLocked;
+    figs.forEach((f) => { f.hidden = !on[f.dataset.fig!]; });
+    if (on.sound && open()) { startSound(); hintOff.hidden = true; hintOn.hidden = false; }
+    else { stopSound(); hintOn.hidden = true; hintOff.hidden = !(open()); }
+  }
+  toggles.forEach((t) => t.addEventListener('change', () => { on[t.dataset.toggle!] = t.checked; apply(); }));
+  root.querySelectorAll<HTMLButtonElement>('[data-role-set]').forEach((b) => b.addEventListener('click', () => {
+    role = b.dataset.roleSet as 'reader' | 'plus';
+    root.querySelectorAll('[data-role-set]').forEach((x) => { x.classList.toggle('is-on', x === b); x.setAttribute('aria-checked', String(x === b)); });
+    if (role === 'plus') on.art = true;
+    apply();
+  }));
+  const form = root.querySelector<HTMLFormElement>('[data-code]')!;
+  const msg = root.querySelector<HTMLElement>('[data-code-msg]')!;
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = (new FormData(form).get('code') as string || '').trim().toUpperCase();
+    if (/^VL-\d{3}/.test(v)) { unlocked = true; on.art = true; msg.textContent = (document.documentElement.lang === 'ru' ? 'Код принят: слои книги открыты навсегда.' : 'Code accepted: this book’s layers are open for good.'); }
+    else msg.textContent = (document.documentElement.lang === 'ru' ? 'Код начинается с VL- и номера книги.' : 'A code starts with VL- and the book number.');
+    apply();
+  });
+  apply();
+</script>
