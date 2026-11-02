@@ -1,0 +1,20 @@
+---
+// Строки оглавления: открытая глава — ссылка, остальные — «полная версия».
+import type { ChapterMeta } from '../lib/catalog';
+import { href, type Lang } from '../lib/i18n';
+interface Item { c: ChapterMeta; open: boolean; part: string | null }
+interface Props { items: Item[]; lang: Lang; slug: string; min: string; openTag: string; fullTag: string }
+const { items, lang, slug, min, openTag, fullTag } = Astro.props;
+---
+<ol class="toc2">
+  {items.map(({ c, open, part }) => (
+    <>
+      {part && <li class="toc2__part"><span class="vl-label">{part}</span></li>}
+      <li class={open ? 'is-open' : 'is-full'}>
+        {open
+          ? <a href={href(lang, `read/${slug}/${c.id}`)}><span class="toc2__t">{c.title}</span><span class="toc2__m">{c.minutes} {min}</span><span class="tag">{openTag}</span></a>
+          : <span class="toc2__row"><span class="toc2__t">{c.title}</span><span class="toc2__m">{c.minutes} {min}</span><span class="tag tag--paid">{fullTag}</span></span>}
+      </li>
+    </>
+  ))}
+</ol>

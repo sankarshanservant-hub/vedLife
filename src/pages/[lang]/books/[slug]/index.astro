@@ -1,8 +1,13 @@
 ---
+// Страница книги. Книга — одна из дверей: здесь показаны все формы, в которых она живёт,
+// и что из этого уже работает. Оглавление отмечает, что открыто, а что в полной версии.
 import Base from '../../../../layouts/Base.astro';
 import Cover from '../../../../components/Cover.astro';
+import Glyph from '../../../../components/Glyph.astro';
+import TocRows from '../../../../components/TocRows.astro';
 import { LANGS, t, href, type Lang } from '../../../../lib/i18n';
-import { BOOKS, territoryOf, tocOf, textLang } from '../../../../lib/catalog';
+import { BOOKS, TERRITORIES, territoryOf, tocOf, textLang } from '../../../../lib/catalog';
+import { BRIEFS, DOORS, STATUS, type Status } from '../../../../lib/portal';
 
 export function getStaticPaths() {
   return LANGS.flatMap((lang) => BOOKS.map((b) => ({ params: { lang, slug: b.slug }, props: { book: b } })));
@@ -16,65 +21,168 @@ const toc = tl ? tocOf(book.slug, tl) : [];
 const first = toc[0];
 const stores = (book.stores ?? []).filter((x) => x.lang === lang);
 const audio = book.audio?.[lang];
+const briefs = BRIEFS.filter((b) => b.book === book.slug);
+const siblings = BOOKS.filter((b) => b.territory === book.territory && b.slug !== book.slug);
+const others = BOOKS.filter((b) => b.slug !== book.slug && b.territory !== book.territory).slice(0, 4 - siblings.length);
+const related = [...siblings, ...others].slice(0, 4);
+const hasLayers = book.slug === 'dharma-gita';
+const free = Math.min(book.freeChapters, toc.length);
+
+const U = {
+  ru: {
+    formsK: 'Формы книги', formsH: 'Одна книга, шесть форм.', formsLead: 'Некоторые уже работают, другие в работе. Мы показываем и то и другое, чтобы было видно, куда книга идёт.',
+    read: 'Читать', readT: `Первые главы открыты, ${free} из ${toc.length}. Читалка помнит, где вы остановились.`, readSoon: 'Текст готовится. Первые главы появятся здесь.',
+    audio: 'Слушать', audioT: 'Чтение вслух. Тот же текст на слух.',
+    layers: 'Слои', layersT: 'Иллюстрации, звук и кадры поверх текста.', layersDemo: 'Образец на прологе этой книги.',
+    reforms: 'Переосмысления', reformsT: 'Работы художников и музыкантов по этой книге.',
+    deck: 'Колода и игра', deckT: 'Карты и сюжеты по мотивам книги.',
+    paper: 'Бумага', paperT: 'Печатное издание. Код внутри навсегда открывает слои этой книги.', paperStore: 'Купить:',
+    open: 'Открыть', tocK: 'Оглавление', tocH: 'Что внутри.', openTag: 'открыто', fullTag: 'полная версия', showAll: (n: number) => `Всё оглавление (${n})`,
+    briefsK: 'Работы вокруг книги', briefsH: 'Книге нужны эти работы.', briefsLead: 'Образцы заданий. Присоединиться можно через Мастерскую.', allBriefs: 'Все задания', briefsEmpty: 'Для этой книги задания ещё не открыты. Если у вас есть идея, расскажите о ней в Мастерской.', toStudio: 'Перейти в Мастерскую',
+    nearK: 'Рядом', nearH: 'Другие книги.', primary: 'Читать первые главы', secondary: 'Слои, образец',
+    meta: { entry: 'Запись', terr: 'Территория', year: 'Год' }, codeK: 'Код книги',
+  },
+  en: {
+    formsK: 'Forms of the book', formsH: 'One book, six forms.', formsLead: 'Some already work, others are in progress. We show both, so you can see where the book is heading.',
+    read: 'Read', readT: `The first chapters are open, ${free} of ${toc.length}. The reader remembers where you stopped.`, readSoon: 'The text is in preparation. The first chapters will appear here.',
+    audio: 'Listen', audioT: 'Read aloud. The same text, by ear.',
+    layers: 'Layers', layersT: 'Illustration, sound and frames over the text.', layersDemo: 'A sample on this book’s prologue.',
+    reforms: 'Re-formations', reformsT: 'Work by artists and musicians on this book.',
+    deck: 'Deck and game', deckT: 'Cards and plots drawn from the book.',
+    paper: 'Paper', paperT: 'The printed edition. A code inside opens this book’s layers for good.', paperStore: 'Buy:',
+    open: 'Open', tocK: 'Contents', tocH: 'What is inside.', openTag: 'open', fullTag: 'full edition', showAll: (n: number) => `Full contents (${n})`,
+    briefsK: 'Work around the book', briefsH: 'The book needs these works.', briefsLead: 'Sample briefs. You can join through the Workshop.', allBriefs: 'All briefs', briefsEmpty: 'No briefs are open for this book yet. If you have an idea, tell us in the Workshop.', toStudio: 'Go to the Workshop',
+    nearK: 'Nearby', nearH: 'Other books.', primary: 'Read the first chapters', secondary: 'Layers, a sample',
+    meta: { entry: 'Entry', terr: 'Territory', year: 'Year' }, codeK: 'Book code',
+  },
+}[lang];
+
+type Form = { id: string; glyph: string; name: string; text: string; status: Status; href?: string; external?: boolean; extra?: string };
+const forms: Form[] = [
+  { id: 'read', glyph: 'G01-scripture', name: U.read, text: first ? U.readT : U.readSoon, status: first ? 'live' : 'building', href: first ? href(lang, `read/${book.slug}/${first.id}`) : undefined },
+  { id: 'audio', glyph: 'G02-recital', name: U.audio, text: U.audioT, status: audio === 'available' ? 'live' : audio === 'soon' ? 'building' : 'idea' },
+  { id: 'layers', glyph: 'G07-film', name: U.layers, text: U.layersT, extra: hasLayers ? U.layersDemo : undefined, status: hasLayers ? 'building' : 'idea', href: hasLayers ? href(lang, 'layers') : undefined },
+  { id: 'reforms', glyph: 'G03-epics', name: U.reforms, text: U.reformsT, status: briefs.length ? 'building' : 'idea', href: href(lang, 'studio') },
+  { id: 'deck', glyph: 'G09-game', name: U.deck, text: U.deckT, status: 'idea' },
+  { id: 'paper', glyph: 'G08-fashion', name: U.paper, text: U.paperT, status: stores.length ? 'live' : 'idea', href: href(lang, 'membership') },
+];
 let lastPart: string | undefined;
+const items = toc.map((c, i) => {
+  const part = c.part && c.part !== lastPart ? c.part : null;
+  lastPart = c.part;
+  return { c, open: i < book.freeChapters, part };
+});
+const SHOW = Math.min(items.length, Math.max(book.freeChapters + 4, 10));
+const visible = items.slice(0, SHOW);
+const rest = items.slice(SHOW);
 ---
 <Base lang={lang} title={book.title[lang]} path={`books/${book.slug}`} current="books" entry={book.entry} description={book.description[lang]}>
-  <div class={`wrap book pig-${terr.pigment}`}>
-    <div class="book__cover"><Cover book={book} lang={lang} size="lg" /></div>
-    <div>
+  <div class={`wrap bk pig-${terr.pigment}`}>
+    <div class="bk__cover"><Cover book={book} lang={lang} size="lg" /></div>
+    <div class="bk__info">
       <span class="vl-label">№ {book.entry} · {terr.name[lang]}</span>
       <h1>{book.title[lang]}</h1>
-      {book.subtitle?.[lang] && <p class="book__sub">{book.subtitle[lang]}</p>}
-      <p class="book__author">{book.author[lang]}</p>
-      <p class="book__desc">{book.description[lang]}</p>
+      {book.subtitle?.[lang] && <p class="bk__sub">{book.subtitle[lang]}</p>}
+      <p class="bk__author">{book.author[lang]}</p>
+      <p class="bk__desc">{book.description[lang]}</p>
       {book.note?.[lang] && <p class="book__note">{book.note[lang]}</p>}
-
-      <h2 class="sr-only">{s.forms}</h2>
-      <div class="forms">
-        {first
-          ? <a class="form form--on" href={href(lang, `read/${book.slug}/${first.id}`)}><b>{s.formRead}</b><span>{s.formReadNote(Math.min(book.freeChapters, toc.length))}{tl !== lang ? ` · ${s.textIn}` : ''}</span><span class="vl-label vl-label--gold">{s.startReading} →</span></a>
-          : <div class="form form--off"><b>{s.formRead}</b><span>{s.inPreparation}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>}
-        <div class="form form--off"><b>{s.formListen}</b><span>{s.formListenSoon}</span><span class="vl-label vl-label--muted">{audio === 'available' ? '' : s.formSoon}</span></div>
-        {stores.length
-          ? <div class="form"><b>{s.formBuy}</b>{stores.map((x) => <a href={x.url} rel="noopener" target="_blank">{x.name} ↗</a>)}</div>
-          : <div class="form form--off"><b>{s.formBuy}</b><span>{s.formBuySoon}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>}
-        <div class="form form--off"><b>{s.formReforms}</b><span>{s.formReformsNote}</span><span class="vl-label vl-label--muted">{s.formSoon}</span></div>
+      <div class="bk__cta">
+        {first && <a class="btn btn--ink" href={href(lang, `read/${book.slug}/${first.id}`)}>{U.primary}</a>}
+        {hasLayers && <a class="btn btn--line" href={href(lang, 'layers')}>{U.secondary}</a>}
       </div>
-
-      {toc.length > 0 && (
-        <section class="toc" aria-labelledby="toc-h">
-          <h2 id="toc-h">{s.contents}</h2>
-          <ol>
-            {toc.map((c, i) => {
-              const partRow = c.part && c.part !== lastPart ? c.part : null;
-              lastPart = c.part;
-              return (
-                <>
-                  {partRow && <li class="part"><span class="vl-label">{partRow}</span></li>}
-                  <li>
-                    {i < book.freeChapters
-                      ? <a href={href(lang, `read/${book.slug}/${c.id}`)}><span>{c.title}</span><span class="min">{c.minutes} {s.min}</span></a>
-                      : <span class="row"><span>{c.title}</span><span class="min">{s.locked}</span></span>}
-                  </li>
-                </>
-              );
-            })}
-          </ol>
-        </section>
-      )}
-
-      <section class="colophon" aria-label={s.colophon}>
-        <svg class="seal" viewBox="0 0 100 100" aria-hidden="true">
-          <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" stroke-width="1.6" />
-          <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width=".8" />
-          <g transform="translate(29 29) scale(.21)"><rect x="24" y="24" width="152" height="152" rx="30" fill="none" stroke="currentColor" stroke-width="12" transform="rotate(20 100 100)" /><circle cx="100" cy="100" r="54" fill="currentColor" /></g>
-        </svg>
-        <dl>
-          <dt>{s.edition}</dt><dd>№ {book.entry} · ved·Life · {book.year}</dd>
-          <dt>{s.book}</dt><dd>{book.title[lang]} · {book.author[lang]}</dd>
-          <dt>{s.forms}</dt><dd>{book.texts.map((l) => l.toUpperCase()).join(' · ') || '—'}</dd>
-        </dl>
-      </section>
+      <dl class="bk__meta">
+        <div><dt>{U.meta.entry}</dt><dd>№ {book.entry}</dd></div>
+        <div><dt>{U.meta.terr}</dt><dd>{terr.name[lang]}</dd></div>
+        <div><dt>{U.meta.year}</dt><dd>{book.year}</dd></div>
+        <div><dt>{s.forms}</dt><dd>{book.texts.map((l) => l.toUpperCase()).join(' · ') || '—'}</dd></div>
+      </dl>
     </div>
+  </div>
+
+  <div class={`wrap pig-${terr.pigment}`}>
+    <section class="section" aria-labelledby="forms-h">
+      <div class="section__head">
+        <div><span class="vl-label">{U.formsK}</span><h2 id="forms-h">{U.formsH}</h2></div>
+        <p>{U.formsLead}</p>
+      </div>
+      <div class="forms6">
+        {forms.map((f) => {
+          const Tag = f.href ? 'a' : 'div';
+          return (
+            <Tag class={`ftile ftile--${f.status}`} href={f.href}>
+              <div class="ftile__top"><Glyph name={f.glyph} size={44} /><span class={`status status--${f.status}`}>{STATUS[f.status][lang]}</span></div>
+              <h3>{f.name}</h3>
+              <p>{f.text}</p>
+              {f.extra && <p class="ftile__extra">{f.extra}</p>}
+              {f.id === 'paper' && stores.length > 0 && <p class="ftile__extra">{U.paperStore} {stores.map((x) => <a href={x.url} rel="noopener" target="_blank">{x.name} ↗</a>)}</p>}
+              {f.href && <span class="arrow-link ftile__go">{U.open} →</span>}
+            </Tag>
+          );
+        })}
+      </div>
+    </section>
+
+    {toc.length > 0 && (
+      <section class="section" aria-labelledby="toc-h">
+        <div class="section__head"><div><span class="vl-label">{U.tocK}</span><h2 id="toc-h">{U.tocH}</h2></div></div>
+        <TocRows items={visible} lang={lang} slug={book.slug} min={s.min} openTag={U.openTag} fullTag={U.fullTag} />
+        {rest.length > 0 && (
+          <details class="toc2__more">
+            <summary><span class="btn btn--line">{U.showAll(toc.length)}</span></summary>
+            <TocRows items={rest} lang={lang} slug={book.slug} min={s.min} openTag={U.openTag} fullTag={U.fullTag} />
+          </details>
+        )}
+      </section>
+    )}
+
+    <section class="section" aria-labelledby="briefs-h">
+      <div class="section__head">
+        <div><span class="vl-label">{U.briefsK}</span><h2 id="briefs-h">{U.briefsH}</h2></div>
+        <p>{briefs.length ? U.briefsLead : U.briefsEmpty}</p>
+      </div>
+      {briefs.length > 0 && (
+        <div class="briefs">
+          {briefs.map((b) => {
+            const d = DOORS.find((x) => x.id === b.door)!;
+            return (
+              <article class={`brief pig-${d.pigment}`}>
+                <div class="brief__top"><Glyph name={d.glyph} size={26} /><span class="vl-label vl-label--muted">{lang === 'ru' ? 'Запись' : 'Entry'} {b.no}</span></div>
+                <span class="vl-label brief__kind">{b.kind[lang]}</span>
+                <h3>{b.title[lang]}</h3>
+                <p>{b.scope[lang]}</p>
+                <span class="brief__reward">{b.reward[lang]}</span>
+              </article>
+            );
+          })}
+        </div>
+      )}
+      <a class="arrow-link section__more" href={href(lang, 'studio')}>{briefs.length ? U.allBriefs : U.toStudio} →</a>
+    </section>
+
+    <section class="section" aria-labelledby="near-h">
+      <div class="section__head"><div><span class="vl-label">{U.nearK}</span><h2 id="near-h">{U.nearH}</h2></div></div>
+      <div class="near">
+        {related.map((b) => (
+          <a class="near__item" href={href(lang, `books/${b.slug}`)}>
+            <Cover book={b} lang={lang} size="sm" />
+            <span class="near__t">{b.title[lang]}</span>
+            <span class="near__m">№ {b.entry} · {territoryOf(b).name[lang]}</span>
+          </a>
+        ))}
+      </div>
+    </section>
+
+    <section class="colophon" aria-label={s.colophon}>
+      <svg class="seal" viewBox="0 0 100 100" aria-hidden="true">
+        <circle cx="50" cy="50" r="47" fill="none" stroke="currentColor" stroke-width="1.6" />
+        <circle cx="50" cy="50" r="41" fill="none" stroke="currentColor" stroke-width=".8" />
+        <g transform="translate(29 29) scale(.21)"><rect x="24" y="24" width="152" height="152" rx="30" fill="none" stroke="currentColor" stroke-width="12" transform="rotate(20 100 100)" /><circle cx="100" cy="100" r="54" fill="currentColor" /></g>
+      </svg>
+      <dl>
+        <dt>{s.edition}</dt><dd>№ {book.entry} · ved·Life · {book.year}</dd>
+        <dt>{s.book}</dt><dd>{book.title[lang]} · {book.author[lang]}</dd>
+        <dt>{s.forms}</dt><dd>{book.texts.map((l) => l.toUpperCase()).join(' · ') || '—'}</dd>
+      </dl>
+    </section>
   </div>
 </Base>
