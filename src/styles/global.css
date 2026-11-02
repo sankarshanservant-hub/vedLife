@@ -321,3 +321,12 @@ p { margin: 0; }
 .tool-icon { display: none; }
 @media (max-width: 640px) { .tool-icon { display: inline; } }
 a:has(> .cover) { display: block; text-decoration: none; }
+
+/* ---------- шрифты: Jost — заголовки и интерфейс, Literata — читаемый текст ---------- */
+p, blockquote, figcaption, .rbody, .verse, .cite { font-family: var(--font-text); }
+h1, h2, h3, h4, .cover__title, .depth__list b, .ladder b, .tier h3, .index-table .title a, .read-row h3, .book-card h3,
+.door h3, .brief h3, .rnav b, .lr__h, .how h3, .principles h3, .threshold h2, .feature h2, .codecard__code, .entries td b, .toc h2 {
+  font-family: var(--font-sans); font-weight: var(--display-weight); letter-spacing: var(--tracking-display); }
+.vl-wordmark { font-family: var(--font-sans); font-weight: 500; letter-spacing: -0.02em; }
+.rbody p, .excerpt p { font-weight: 400; }
+.rbody h3 { font-family: var(--font-sans); font-weight: 500; }

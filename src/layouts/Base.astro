@@ -29,8 +29,8 @@ const fullTitle = title === 'ved·Life' ? `ved·Life — ${s.tagline}` : `${titl
   <meta name="theme-color" content="#0B0B0C" />
   <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
   <link rel="alternate" hreflang={otherLang(lang)} href={href(otherLang(lang), path)} />
-  <link rel="preload" href={`/fonts/inter-${lang === 'ru' ? 'cyrillic' : 'latin'}-400-normal.woff2`} as="font" type="font/woff2" crossorigin />
-  <link rel="preload" href={`/fonts/inter-${lang === 'ru' ? 'cyrillic' : 'latin'}-600-normal.woff2`} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={`/fonts/literata-${lang === 'ru' ? 'cyrillic' : 'latin'}-400-normal.woff2`} as="font" type="font/woff2" crossorigin />
+  <link rel="preload" href={`/fonts/jost-${lang === 'ru' ? 'cyrillic' : 'latin'}-500-normal.woff2`} as="font" type="font/woff2" crossorigin />
   <meta property="og:title" content={fullTitle} />
   {description && <meta property="og:description" content={description} />}
   <meta property="og:site_name" content="ved·Life" />
